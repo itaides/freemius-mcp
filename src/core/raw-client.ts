@@ -31,13 +31,19 @@ export function isOkStatus(status: number): boolean {
     return status >= 200 && status < 300;
 }
 
+// The ONE place the unstable accessor is cast (review #10). openapi-fetch's typed surface is
+// per-path; this raw escape hatch is intentionally untyped. Keep this the only `as unknown as`.
+function unstableClient(client: Freemius): OpenApiFetchLike {
+    return client.api.__unstable_ApiClient as unknown as OpenApiFetchLike;
+}
+
 export async function rawRequest<T = unknown>(
     client: Freemius,
     method: HttpMethod,
     templatePath: string,
     args: RawRequestArgs = {}
 ): Promise<RawResult<T>> {
-    const api = client.api.__unstable_ApiClient as unknown as OpenApiFetchLike;
+    const api = unstableClient(client);
 
     const result = await api[method](templatePath, {
         params: { path: args.path, query: args.query },

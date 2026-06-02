@@ -1,72 +1,34 @@
-// subscriptions command handlers (docs/specs §6). Curated reads use the SDK's typed service.
-// Curated-error contract (§5): a missing result surfaces a clear not-found rather than a bare null.
+// subscriptions command (docs/specs §6). Reads are now served by the data-driven `registerReads`
+// surface (src/cli/commands/reads.ts); this module keeps ONLY the `cancel` write.
+//
+// `cancel` is a product-scope, DESTRUCTIVE write: it requires write mode (§7) AND a confirm echo.
+// The SDK's `subscription.cancel` swallows non-2xx to `null`, so we map that to an honest
+// `err('cancel_failed', …)` Result.
 
 import type { Command } from 'commander';
-import type { Freemius, SubscriptionEntity, SubscriptionCancellationResult } from '@freemius/sdk';
+import type { Freemius, SubscriptionCancellationResult } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
-import { toGetResult, type GetResult } from '../../core/reads.js';
+import { ok, err, type Result } from '../../core/result.js';
 import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
 import { withTimeout } from '../../core/timeout.js';
 import { errorEnvelope } from '../../core/format.js';
 import { handledByDryRun } from '../cli-helpers.js';
 
-export async function getSubscription(client: Freemius, id: string): Promise<GetResult<SubscriptionEntity>> {
-    return toGetResult(await withTimeout(client.api.subscription.retrieve(id)), id);
-}
-
-export type CancelSubscriptionResult =
-    | { cancelled: true; data: SubscriptionCancellationResult }
-    | { cancelled: false; id: string };
-
 export async function cancelSubscription(
     client: Freemius,
     id: string,
     options: { feedback?: string } = {}
-): Promise<CancelSubscriptionResult> {
+): Promise<Result<SubscriptionCancellationResult>> {
     const result = await withTimeout(client.api.subscription.cancel(id, options.feedback));
-    return result ? { cancelled: true, data: result } : { cancelled: false, id };
-}
-
-export interface ListSubscriptionsOptions {
-    count?: number;
-    offset?: number;
-}
-
-export async function listSubscriptions(
-    client: Freemius,
-    options: ListSubscriptionsOptions = {}
-): Promise<SubscriptionEntity[]> {
-    return withTimeout(client.api.subscription.retrieveMany(undefined, { count: options.count, offset: options.offset }));
+    return result ? ok(result) : err('cancel_failed', `subscription ${id} could not be cancelled`);
 }
 
 export function registerSubscriptions(program: Command, resolve: () => FreemiusContext): void {
-    const subscriptions = program.command('subscriptions').description('Subscription reads and mutations');
-
-    subscriptions
-        .command('get')
-        .argument('<id>', 'subscription id')
-        .description('Get a subscription by id')
-        .action(async (id: string) => {
-            const result = await getSubscription(resolve().client, id);
-
-            if (!result.found) {
-                console.log(JSON.stringify({ error: 'not_found', resource: 'subscription', id: result.id }));
-                process.exitCode = 1;
-                return;
-            }
-
-            console.log(JSON.stringify(result.data, null, 2));
-        });
-
-    subscriptions
-        .command('list')
-        .description('List subscriptions')
-        .option('--count <n>', 'page size (max 50)', (v) => Number.parseInt(v, 10))
-        .option('--offset <n>', 'page offset', (v) => Number.parseInt(v, 10))
-        .action(async (opts: { count?: number; offset?: number }) => {
-            const subs = await listSubscriptions(resolve().client, opts);
-            console.log(JSON.stringify(subs, null, 2));
-        });
+    // Reads register a `subscriptions` group first; attach `cancel` to it so the public command path
+    // stays `subscriptions cancel <id>`. Fall back to creating the group if reads didn't run.
+    const subscriptions =
+        program.commands.find((c) => c.name() === 'subscriptions') ??
+        program.command('subscriptions').description('Subscription reads and mutations');
 
     subscriptions
         .command('cancel')
@@ -89,8 +51,8 @@ export function registerSubscriptions(program: Command, resolve: () => FreemiusC
 
             const result = await cancelSubscription(resolve().client, id, { feedback: opts.feedback });
 
-            if (!result.cancelled) {
-                console.log(JSON.stringify({ error: 'cancel_failed', resource: 'subscription', id: result.id }));
+            if (!result.ok) {
+                console.log(JSON.stringify({ error: result.error }));
                 process.exitCode = 1;
                 return;
             }

@@ -1,16 +1,17 @@
 // curated.ts — first-class named MCP tools (docs/specs §7), tight zod inputs + read-only annotations.
 // They reuse the same handlers as the CLI, so behavior is identical across both surfaces.
+//
+// Reads are generated in a loop from READ_ENTITIES (review #6/#11): each entity gets `list_<name>`
+// and `get_<name>` built on the shared `getEntity`/`listEntity` helpers. Writes stay explicit.
 
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { Freemius } from '@freemius/sdk';
-import type { GetResult } from '../../core/reads.js';
+import type { Result, ApiError } from '../../core/result.js';
+import { READ_ENTITIES, getEntity, listEntity } from '../../core/entities.js';
 import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
-import { getSubscription, listSubscriptions, cancelSubscription } from '../../cli/commands/subscriptions.js';
-import { getUser, listUsers } from '../../cli/commands/users.js';
-import { getPayment, listPayments } from '../../cli/commands/payments.js';
-import { getPlan, listPlans } from '../../cli/commands/plans.js';
+import { cancelSubscription } from '../../cli/commands/subscriptions.js';
 import { createCoupon } from '../../cli/commands/coupons.js';
 
 const listShape = {
@@ -18,22 +19,16 @@ const listShape = {
     offset: z.number().int().nonnegative().optional().describe('page offset'),
 };
 
-function idShape(resource: string) {
-    return { id: z.string().describe(`${resource} id`) };
-}
-
 function jsonResult(data: unknown): CallToolResult {
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
 }
 
-function getResult<T>(result: GetResult<T>, resource: string): CallToolResult {
-    if (!result.found) {
-        return {
-            content: [{ type: 'text', text: JSON.stringify({ error: 'not_found', resource, id: result.id }) }],
-            isError: true,
-        };
-    }
-    return jsonResult(result.data);
+function apiErrorResult(error: ApiError): CallToolResult {
+    return { content: [{ type: 'text', text: JSON.stringify({ error }) }], isError: true };
+}
+
+function resultToCall<T>(result: Result<T>): CallToolResult {
+    return result.ok ? jsonResult(result.data) : apiErrorResult(result.error);
 }
 
 function errorResult(error: Error): CallToolResult {
@@ -47,16 +42,23 @@ export interface CuratedToolOptions {
 }
 
 export function registerCuratedTools(server: McpServer, client: Freemius, options: CuratedToolOptions): void {
-    server.registerTool(
-        'list_subscriptions',
-        { description: 'List subscriptions for the product.', inputSchema: listShape, annotations: readOnly('List subscriptions') },
-        async ({ count, offset }) => jsonResult(await listSubscriptions(client, { count, offset }))
-    );
-    server.registerTool(
-        'get_subscription',
-        { description: 'Get a subscription by id.', inputSchema: idShape('subscription'), annotations: readOnly('Get subscription') },
-        async ({ id }) => getResult(await getSubscription(client, id), 'subscription')
-    );
+    for (const def of READ_ENTITIES) {
+        server.registerTool(
+            `list_${def.name}`,
+            { description: `List ${def.name} for the product.`, inputSchema: listShape, annotations: readOnly(`List ${def.name}`) },
+            async ({ count, offset }) => resultToCall(await listEntity(client, def, { count, offset }))
+        );
+        server.registerTool(
+            `get_${def.singular}`,
+            {
+                description: `Get a ${def.singular} by id.`,
+                inputSchema: { id: z.string().describe(`${def.singular} id`) },
+                annotations: readOnly(`Get ${def.singular}`),
+            },
+            async ({ id }) => resultToCall(await getEntity(client, def, id))
+        );
+    }
+
     server.registerTool(
         'cancel_subscription',
         {
@@ -76,45 +78,8 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 return errorResult(error as Error);
             }
 
-            const result = await cancelSubscription(client, id);
-            if (!result.cancelled) {
-                return errorResult(Object.assign(new Error(`Subscription ${id} could not be cancelled`), { name: 'cancel_failed' }));
-            }
-            return jsonResult(result.data);
+            return resultToCall(await cancelSubscription(client, id));
         }
-    );
-
-    server.registerTool(
-        'list_users',
-        { description: 'List users for the product.', inputSchema: listShape, annotations: readOnly('List users') },
-        async ({ count, offset }) => jsonResult(await listUsers(client, { count, offset }))
-    );
-    server.registerTool(
-        'get_user',
-        { description: 'Get a user by id.', inputSchema: idShape('user'), annotations: readOnly('Get user') },
-        async ({ id }) => getResult(await getUser(client, id), 'user')
-    );
-
-    server.registerTool(
-        'list_payments',
-        { description: 'List payments for the product.', inputSchema: listShape, annotations: readOnly('List payments') },
-        async ({ count, offset }) => jsonResult(await listPayments(client, { count, offset }))
-    );
-    server.registerTool(
-        'get_payment',
-        { description: 'Get a payment by id.', inputSchema: idShape('payment'), annotations: readOnly('Get payment') },
-        async ({ id }) => getResult(await getPayment(client, id), 'payment')
-    );
-
-    server.registerTool(
-        'list_plans',
-        { description: 'List the product pricing plans.', inputSchema: listShape, annotations: readOnly('List plans') },
-        async ({ count, offset }) => jsonResult(await listPlans(client, { count, offset }))
-    );
-    server.registerTool(
-        'get_plan',
-        { description: 'Get a plan by id.', inputSchema: idShape('plan'), annotations: readOnly('Get plan') },
-        async ({ id }) => getResult(await getPlan(client, id), 'plan')
     );
 
     server.registerTool(
@@ -137,13 +102,7 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 return errorResult(error as Error);
             }
 
-            const result = await createCoupon(client, { code, discount, discount_type, plans });
-            if (!result.created) {
-                return errorResult(
-                    Object.assign(new Error(`Coupon could not be created (status ${result.status})`), { name: 'create_failed' })
-                );
-            }
-            return jsonResult(result.data);
+            return resultToCall(await createCoupon(client, { code, discount, discount_type, plans }));
         }
     );
 }

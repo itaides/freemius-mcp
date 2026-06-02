@@ -6,6 +6,7 @@ import type { Command } from 'commander';
 import type { Freemius } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
 import { rawRequest, isOkStatus } from '../../core/raw-client.js';
+import { ok, err, type Result } from '../../core/result.js';
 import { assertWriteEnabled } from '../../core/guards.js';
 import { errorEnvelope } from '../../core/format.js';
 import { handledByDryRun } from '../cli-helpers.js';
@@ -23,9 +24,7 @@ export interface CreateCouponInput {
     has_addons_discount?: boolean;
 }
 
-export type CreateCouponResult = { created: true; data: CouponRow } | { created: false; status: number };
-
-export async function createCoupon(client: Freemius, input: CreateCouponInput): Promise<CreateCouponResult> {
+export async function createCoupon(client: Freemius, input: CreateCouponInput): Promise<Result<CouponRow>> {
     // Pass through only the fields that were supplied (the API rejects unexpected nulls on some fields).
     const body: Record<string, unknown> = { code: input.code, discount: input.discount, discount_type: input.discount_type };
     if (input.plans !== undefined) body.plans = input.plans;
@@ -40,10 +39,10 @@ export async function createCoupon(client: Freemius, input: CreateCouponInput): 
     });
 
     if (!isOkStatus(result.status) || result.data?.id == null) {
-        return { created: false, status: result.status };
+        return err('create_failed', 'coupon could not be created', result.status);
     }
 
-    return { created: true, data: result.data };
+    return ok(result.data);
 }
 
 export function registerCoupons(program: Command, resolve: () => FreemiusContext): void {
@@ -79,8 +78,8 @@ export function registerCoupons(program: Command, resolve: () => FreemiusContext
                     plans: opts.plans,
                 });
 
-                if (!result.created) {
-                    console.log(JSON.stringify({ error: 'create_failed', resource: 'coupon', status: result.status }));
+                if (!result.ok) {
+                    console.log(JSON.stringify({ error: result.error }));
                     process.exitCode = 1;
                     return;
                 }

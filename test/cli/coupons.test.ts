@@ -32,7 +32,7 @@ describe('createCoupon', () => {
         });
 
         expect(result).toEqual({
-            created: true,
+            ok: true,
             data: { id: 42, code: 'SAVE20', discount: 20, discount_type: 'percentage' },
         });
         expect(received).toEqual({ code: 'SAVE20', discount: 20, discount_type: 'percentage', plans: ['9'] });
@@ -61,6 +61,10 @@ describe('createCoupon', () => {
 
         const result = await createCoupon(client, { code: 'BAD', discount: 5, discount_type: 'percentage' });
 
-        expect(result).toEqual({ created: false, status: 422 });
+        expect(result.ok).toBe(false);
+        if (!result.ok) {
+            expect(result.error.code).toBe('create_failed');
+            expect(result.error.status).toBe(422);
+        }
     });
 });

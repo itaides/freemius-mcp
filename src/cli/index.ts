@@ -5,10 +5,8 @@ import { Command } from 'commander';
 import { createFreemius } from '../core/freemius.js';
 import { loadProfile } from '../core/auth.js';
 import { errorEnvelope } from '../core/format.js';
+import { registerReads } from './commands/reads.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
-import { registerUsers } from './commands/users.js';
-import { registerPayments } from './commands/payments.js';
-import { registerPlans } from './commands/plans.js';
 import { registerCoupons } from './commands/coupons.js';
 
 const program = new Command();
@@ -32,10 +30,10 @@ const resolveContext = () => {
     });
 };
 
+// Reads register the entity command groups (subscriptions/users/payments/plans) first; the
+// subscriptions `cancel` write then attaches to the existing `subscriptions` group.
+registerReads(program, resolveContext);
 registerSubscriptions(program, resolveContext);
-registerUsers(program, resolveContext);
-registerPayments(program, resolveContext);
-registerPlans(program, resolveContext);
 registerCoupons(program, resolveContext);
 // TODO(docs/specs §6): licenses, installs + `call` + `mcp`.
 
