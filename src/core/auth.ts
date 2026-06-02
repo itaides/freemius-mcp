@@ -8,7 +8,24 @@ export interface Credentials {
     publicKey?: string;
 }
 
-// TODO(docs/specs §8): read env / profile, validate presence, redact in any error output.
-export function resolveCredentials(_opts?: { profile?: string; productId?: string }): Credentials {
-    throw new Error('auth.resolveCredentials: not implemented — see docs/specs §8');
+export interface ResolveInput {
+    /** CLI flag overrides (highest precedence), e.g. --product. */
+    flags?: Partial<Credentials>;
+    /** Environment source; defaults to process.env. */
+    env?: Record<string, string | undefined>;
+}
+
+export class MissingCredentialError extends Error {
+    constructor(public readonly field: string) {
+        super(`Missing Freemius credential: ${field}`);
+        this.name = 'MissingCredentialError';
+    }
+}
+
+export function resolveCredentials(input: ResolveInput = {}): Credentials {
+    const env = input.env ?? process.env;
+    const productId = input.flags?.productId ?? env.FREEMIUS_PRODUCT_ID ?? '';
+    const apiKey = input.flags?.apiKey ?? env.FREEMIUS_API_KEY ?? '';
+
+    return { productId, apiKey };
 }
