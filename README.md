@@ -11,8 +11,12 @@ ergonomic control of a Freemius **product** — built on the official [`@freemiu
 
 ## Status
 
-🚧 In active development. Auth, the curated read surface, and the first guarded write are live and
-verified against a real product. See [`CHANGELOG.md`](./CHANGELOG.md).
+✅ **v1 — working.** The CLI and MCP server are live and verified against a real product: curated
+reads (subscriptions, users, payments, plans) and guarded writes (`cancel_subscription`,
+`create_coupon`), all read-only by default. Built on a unified `Result<T>` engine with request
+timeouts, secret redaction, and a generated 140-operation catalog. The generic long-tail — a `call`
+command and the dynamic MCP trio over all 140 ops — is the next milestone. See
+[`CHANGELOG.md`](./CHANGELOG.md) and the [implementation plan](./docs/plans).
 
 ## Authentication
 
@@ -41,21 +45,24 @@ bun run dev:mcp        # stdio MCP server
 freemius subscriptions list|get <id>
 freemius users         list|get <id>
 freemius payments      list|get <id>
-freemius plans         list|get <id>            # read-only
+freemius plans         list|get <id>
 
 # writes require --write; destructive ones also require --confirm <id>
 freemius --write subscriptions cancel <id> --confirm <id>
+freemius --write coupons create --code SAVE20 --discount 20 --discount-type percentage
 ```
 
-Global flags: `--json` (default), `--product <id>`, `--profile <name>`, `--write`, `--dry-run`.
+Global flags: `--product <id>`, `--profile <name>` (reads `~/.config/freemius/config.json` — no env
+needed), `--write`, `--dry-run` (preview a mutation without calling the API).
 
 ## MCP server
 
 Read tools (always on): `list_subscriptions`, `get_subscription`, `list_users`, `get_user`,
 `list_payments`, `get_payment`, `list_plans`, `get_plan`.
 
-Write tools (gated): `cancel_subscription` — refused unless `FREEMIUS_MCP_ALLOW_WRITE=1` **and** a
-`confirm` arg echoes the target id. More writes (`create_coupon`, …) to come.
+Write tools (gated, off by default): set `FREEMIUS_MCP_ALLOW_WRITE=1` to enable —
+- `cancel_subscription` — **destructive**; also requires a `confirm` arg echoing the subscription id.
+- `create_coupon` — needs write mode (not destructive, no confirm).
 
 **Wire into Claude Code (pre-publish, from source — no secrets in the config, reads your `.env`):**
 
