@@ -11,6 +11,7 @@ import { getSubscription, listSubscriptions, cancelSubscription } from '../../cl
 import { getUser, listUsers } from '../../cli/commands/users.js';
 import { getPayment, listPayments } from '../../cli/commands/payments.js';
 import { getPlan, listPlans } from '../../cli/commands/plans.js';
+import { createCoupon } from '../../cli/commands/coupons.js';
 
 const listShape = {
     count: z.number().int().positive().max(50).optional().describe('page size (max 50)'),
@@ -114,5 +115,35 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
         'get_plan',
         { description: 'Get a plan by id.', inputSchema: idShape('plan'), annotations: readOnly('Get plan') },
         async ({ id }) => getResult(await getPlan(client, id), 'plan')
+    );
+
+    server.registerTool(
+        'create_coupon',
+        {
+            description:
+                'Create a coupon for the product. A write — requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1). Not destructive (no confirm needed).',
+            inputSchema: {
+                code: z.string().describe('the coupon code'),
+                discount: z.number().describe('discount amount'),
+                discount_type: z.enum(['percentage', 'dollar']).describe("discount type: 'percentage' or 'dollar'"),
+                plans: z.array(z.string()).optional().describe('plan ids the coupon applies to (defaults to all)'),
+            },
+            annotations: { title: 'Create coupon', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+        },
+        async ({ code, discount, discount_type, plans }) => {
+            try {
+                assertWriteEnabled(options.writeEnabled);
+            } catch (error) {
+                return errorResult(error as Error);
+            }
+
+            const result = await createCoupon(client, { code, discount, discount_type, plans });
+            if (!result.created) {
+                return errorResult(
+                    Object.assign(new Error(`Coupon could not be created (status ${result.status})`), { name: 'create_failed' })
+                );
+            }
+            return jsonResult(result.data);
+        }
     );
 }

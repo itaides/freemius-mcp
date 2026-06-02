@@ -7,6 +7,7 @@ import { registerSubscriptions } from './commands/subscriptions.js';
 import { registerUsers } from './commands/users.js';
 import { registerPayments } from './commands/payments.js';
 import { registerPlans } from './commands/plans.js';
+import { registerCoupons } from './commands/coupons.js';
 
 const program = new Command();
 
@@ -27,6 +28,7 @@ registerSubscriptions(program, resolveContext);
 registerUsers(program, resolveContext);
 registerPayments(program, resolveContext);
 registerPlans(program, resolveContext);
-// TODO(docs/specs §6): licenses, installs, coupons + `call` + `mcp`.
+registerCoupons(program, resolveContext);
+// TODO(docs/specs §6): licenses, installs + `call` + `mcp`.
 
 program.parse();

@@ -96,3 +96,43 @@ describe('cancel_subscription (write gate)', () => {
         expect(JSON.parse(textOf(result))).toEqual({ id: 5, is_canceled: true });
     });
 });
+
+describe('create_coupon (write gate)', () => {
+    it('is present and annotated non-destructive', async () => {
+        const client = await connectClient(false);
+        const tools = (await client.listTools()).tools;
+        const create = tools.find((t) => t.name === 'create_coupon');
+
+        expect(create).toBeDefined();
+        expect(create?.annotations?.readOnlyHint).toBe(false);
+        expect(create?.annotations?.destructiveHint).toBe(false);
+    });
+
+    it('is refused when write mode is off (fail-closed)', async () => {
+        const client = await connectClient(false);
+        const result = await client.callTool({
+            name: 'create_coupon',
+            arguments: { code: 'SAVE20', discount: 20, discount_type: 'percentage' },
+        });
+
+        expect(result.isError).toBe(true);
+        expect(JSON.parse(textOf(result)).error).toBe('WriteNotAllowedError');
+    });
+
+    it('creates when write mode is on', async () => {
+        msw.use(
+            http.post('https://fast-api.freemius.com/v1/products/1/coupons.json', () =>
+                HttpResponse.json({ id: 42, code: 'SAVE20', discount: 20, discount_type: 'percentage' })
+            )
+        );
+
+        const client = await connectClient(true);
+        const result = await client.callTool({
+            name: 'create_coupon',
+            arguments: { code: 'SAVE20', discount: 20, discount_type: 'percentage' },
+        });
+
+        expect(result.isError).toBeFalsy();
+        expect(JSON.parse(textOf(result))).toEqual({ id: 42, code: 'SAVE20', discount: 20, discount_type: 'percentage' });
+    });
+});
