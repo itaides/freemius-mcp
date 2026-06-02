@@ -23,29 +23,32 @@ for the architecture map; this skill is the how-to for the common tasks.
 - Match existing style: 4-space indent, single quotes, 120 width, `import type` for type-only imports.
 - **Verify before claiming done:** `bun run typecheck && bun run lint && bun run test`.
 
+## Everything returns `Result<T>`
+
+`src/core/result.ts`: `Result<T> = { ok: true; data: T } | { ok: false; error: { code, message, status? } }`,
+with `ok(data)` / `err(code, message, status?)`. Every handler (get/list/cancel/create) returns this.
+Surfaces branch on `result.ok` — CLI prints `data` or `{ error }` + exit 1; MCP returns `jsonResult` or
+`errorResult`. There is no `GetResult`/`toGetResult` anymore.
+
+## Reads are data-driven — add a read in ONE line
+
+ALL reads go through the raw client via `src/core/entities.ts` (`getEntity`/`listEntity`), so failures
+surface as honest `err`, not `[]`/`null`. To add a read entity (e.g. `licenses`):
+
+1. **Add one entry** to `READ_ENTITIES` in `src/core/entities.ts`:
+   `{ name: 'licenses', listKey: 'licenses', singular: 'license' }`. That's it — the CLI loop
+   (`commands/reads.ts`) and the MCP loop (`tools/curated.ts`) both pick it up: you get
+   `licenses get|list` and `list_licenses`/`get_license` for free, capped at 50, with `Result`.
+2. **Test** — add the entity to the parametrized `test/cli/reads.test.ts` (msw-mock
+   `…/products/1/licenses.json` and `…/licenses/{id}.json`). Confirm `listEntity`→`ok([...])`,
+   `getEntity`→`ok`/`err('not_found')`.
+3. Verify. (Only reach for a bespoke module if the entity needs non-standard params/filters.)
+
 ## Which path: SDK service vs raw client?
 
-The SDK exposes typed services for **only** these entities: `user`, `license`, `product`,
-`subscription`, `payment`, `event` (`client.api.<name>`). Everything else — **coupons, plans,
-installs, carts, reviews, addons, trials** — has no service and goes through `rawRequest`.
-
-## Recipe: add a curated entity read (e.g. `licenses`)
-
-Copy the closest existing module as a template: `src/cli/commands/payments.ts` (SDK service) or
-`src/cli/commands/plans.ts` (raw client).
-
-1. **Test first** — `test/cli/<entity>.test.ts`, msw-mock
-   `https://fast-api.freemius.com/v1/products/1/<entity>...`. Assert `getX` → `{ found, data }` /
-   `{ found, id }` (via `toGetResult`) and `listX` → the array.
-2. **Handlers** — `src/cli/commands/<entity>.ts`:
-   - SDK service: `toGetResult(await client.api.<name>.retrieve(id), id)`;
-     `client.api.<name>.retrieveMany(undefined, { count, offset })`.
-   - Raw: `rawRequest(client, 'GET', '/products/{product_id}/<entity>.json', { path: { product_id: client.api.productId }, query })`, then `isOkStatus(status)` + check the array key.
-3. **CLI** — export `register<Entity>(program, resolve)` with `get`/`list` subcommands; mount it in
-   `src/cli/index.ts`.
-4. **MCP** — add `list_<entity>` / `get_<entity>` in `src/mcp/tools/curated.ts` reusing the handlers,
-   with `readOnly(...)` annotations.
-5. Verify.
+Reads: **always raw** (via `entities.ts`). Writes: use the SDK service method if one exists
+(`subscription.cancel`, wrapped in `withTimeout`), else `rawRequest` POST/PUT/DELETE. SDK services
+exist only for `user/license/product/subscription/payment/event`; coupons/plans/installs/etc. have none.
 
 ## Recipe: add a write (mutation)
 

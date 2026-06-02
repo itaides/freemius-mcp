@@ -57,16 +57,21 @@ src/
   core/        # shared engine
     auth.ts        # resolveCredentials (flags > env > profile) + loadProfile; MissingCredentialError
     freemius.ts    # createFreemius → SDK client + `canSign` (placeholder-secret fallback, see §6)
-    raw-client.ts  # SOLE consumer of api.__unstable_ApiClient; rawRequest(client, method, templatePath, {path,query,body})
-    reads.ts       # toGetResult — the {found,data} | {found,id} not-found contract
+    raw-client.ts  # SOLE consumer of api.__unstable_ApiClient (via unstableClient()); rawRequest(...) w/ AbortSignal timeout
+    result.ts      # Result<T> = {ok,data} | {ok:false,error:{code,message,status?}} + ok()/err()
+    entities.ts    # READ_ENTITIES registry + generic getEntity/listEntity — ALL reads go raw → honest Result
     guards.ts      # assertWriteEnabled (fail-closed) + assertConfirmed (echo target id)
+    timeout.ts     # withTimeout + REQUEST_TIMEOUT_MS; format.ts # redactSecrets + errorEnvelope + FreemiusApiError
     catalog/validators/schema  # GENERATED stubs (codegen not built yet — §9)
-  cli/         # commander → bin `freemius`; commands/*.ts (subscriptions, users, payments, plans)
-  mcp/         # @modelcontextprotocol/sdk stdio server → bin `freemius-mcp`; tools/curated.ts
+  cli/         # commander → bin `freemius`; commands/reads.ts (registry-driven reads) + subscriptions.ts (cancel) + coupons.ts (create)
+  mcp/         # @modelcontextprotocol/sdk stdio server → bin `freemius-mcp`; tools/curated.ts (read loop + write tools)
 ```
 
-Handlers (`getX`/`listX`/`cancelX`) live in `cli/commands/*` and are **reused by both** the CLI and
-the MCP tools, so behavior is identical across surfaces.
+Reads are **data-driven**: one `READ_ENTITIES` registry drives both a CLI loop and an MCP loop, so
+adding a read entity is a one-line registry entry. Writes (`cancelSubscription`, `createCoupon`) are
+explicit handlers. All handlers return `Result<T>` and are **reused by both** surfaces, so behavior is
+identical. The CLI uses `parseAsync` + a top-level error boundary; `--dry-run` previews mutations
+without calling the API; `--profile` loads `~/.config/freemius/config.json`.
 
 ## 5. Conventions (follow these)
 
