@@ -1,10 +1,10 @@
 // raw-client.ts — the SOLE consumer of `@freemius/sdk`'s `api.__unstable_ApiClient`.
 // Isolation seam (docs/specs §5, §10): an upstream change to the unstable accessor is a one-file fix.
 //
-// `openapi-fetch` matches on the TEMPLATE path (e.g. '/products/{product_id}/coupons/{coupon_id}.json'),
+// `openapi-fetch` matches on the TEMPLATE path (e.g. '/products/{product_id}/plans/{plan_id}.json'),
 // not an interpolated string — so we forward { path, query, body } separately and never pre-substitute.
 
-// import type { Freemius } from '@freemius/sdk';
+import type { Freemius } from '@freemius/sdk';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -14,11 +14,38 @@ export interface RawRequestArgs {
     body?: unknown;
 }
 
-// TODO(docs/specs §5): wrap api.__unstable_ApiClient[method](templatePath, { params: { path, query }, body }).
-export async function rawRequest(
-    _method: HttpMethod,
-    _templatePath: string,
-    _args: RawRequestArgs = {}
-): Promise<never> {
-    throw new Error('raw-client.rawRequest: not implemented — see docs/specs §5');
+export interface RawResult<T = unknown> {
+    status: number;
+    data: T | undefined;
+    error: unknown;
+}
+
+// openapi-fetch's typed surface is per-path; the raw escape hatch is intentionally untyped here.
+type OpenApiFetchLike = Record<
+    HttpMethod,
+    (path: string, init: unknown) => Promise<{ data?: unknown; error?: unknown; response: Response }>
+>;
+
+export function isOkStatus(status: number): boolean {
+    return status >= 200 && status < 300;
+}
+
+export async function rawRequest<T = unknown>(
+    client: Freemius,
+    method: HttpMethod,
+    templatePath: string,
+    args: RawRequestArgs = {}
+): Promise<RawResult<T>> {
+    const api = client.api.__unstable_ApiClient as unknown as OpenApiFetchLike;
+
+    const result = await api[method](templatePath, {
+        params: { path: args.path, query: args.query },
+        body: args.body,
+    });
+
+    return {
+        status: result.response.status,
+        data: result.data as T | undefined,
+        error: result.error,
+    };
 }

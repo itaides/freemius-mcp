@@ -4,19 +4,10 @@
 import type { Command } from 'commander';
 import type { Freemius, SubscriptionEntity } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
+import { toGetResult, type GetResult } from '../../core/reads.js';
 
-export type GetSubscriptionResult =
-    | { found: true; subscription: SubscriptionEntity }
-    | { found: false; id: string };
-
-export async function getSubscription(client: Freemius, id: string): Promise<GetSubscriptionResult> {
-    const subscription = await client.api.subscription.retrieve(id);
-
-    if (!subscription) {
-        return { found: false, id };
-    }
-
-    return { found: true, subscription };
+export async function getSubscription(client: Freemius, id: string): Promise<GetResult<SubscriptionEntity>> {
+    return toGetResult(await client.api.subscription.retrieve(id), id);
 }
 
 export interface ListSubscriptionsOptions {
@@ -47,7 +38,7 @@ export function registerSubscriptions(program: Command, resolve: () => FreemiusC
                 return;
             }
 
-            console.log(JSON.stringify(result.subscription, null, 2));
+            console.log(JSON.stringify(result.data, null, 2));
         });
 
     subscriptions

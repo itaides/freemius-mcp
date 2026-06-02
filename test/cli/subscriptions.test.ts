@@ -20,7 +20,7 @@ describe('getSubscription', () => {
         const { client } = createFreemius({ env: fakeEnv });
         const result = await getSubscription(client, '123');
 
-        expect(result).toEqual({ found: true, subscription: { id: 123, plan_id: 7 } });
+        expect(result).toEqual({ found: true, data: { id: 123, plan_id: 7 } });
     });
 
     it('reports not-found clearly when the API has no such subscription', async () => {

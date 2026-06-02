@@ -4,6 +4,9 @@
 import { Command } from 'commander';
 import { createFreemius } from '../core/freemius.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
+import { registerUsers } from './commands/users.js';
+import { registerPayments } from './commands/payments.js';
+import { registerPlans } from './commands/plans.js';
 
 const program = new Command();
 
@@ -21,6 +24,9 @@ program
 const resolveContext = () => createFreemius({ flags: { productId: program.opts().product } });
 
 registerSubscriptions(program, resolveContext);
-// TODO(docs/specs §6): licenses, users, installs, payments, plans, coupons + `call` + `mcp`.
+registerUsers(program, resolveContext);
+registerPayments(program, resolveContext);
+registerPlans(program, resolveContext);
+// TODO(docs/specs §6): licenses, installs, coupons + `call` + `mcp`.
 
 program.parse();
