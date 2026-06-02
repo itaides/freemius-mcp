@@ -4,12 +4,15 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { loadProfile } from '../core/auth.js';
 import { createFreemius } from '../core/freemius.js';
 import { registerCuratedTools } from './tools/curated.js';
 import { registerDynamicTools } from './tools/dynamic.js';
 
 async function main(): Promise<void> {
-    const { client } = createFreemius();
+    // Resolve creds with the same precedence as the CLI: env > ~/.config/freemius/config.json profile.
+    // So the server can run env-free (`bun run src/mcp/index.ts`) reading the profile, not just --env-file.
+    const { client } = createFreemius({ profile: loadProfile(process.env.FREEMIUS_PROFILE ?? 'default') });
     const writeEnabled = process.env.FREEMIUS_MCP_ALLOW_WRITE === '1';
 
     const server = new McpServer({ name: 'freemius-mcp', version: '0.0.0' });

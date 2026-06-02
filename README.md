@@ -75,6 +75,17 @@ gate as everything else).
 claude mcp add freemius -- bun --env-file=/ABS/PATH/freemius-mcp/.env run /ABS/PATH/freemius-mcp/src/mcp/index.ts
 ```
 
+**Env-free alternative** — put your keys once in `~/.config/freemius/config.json` and drop `--env-file`
+(the server reads env *or* the profile; `FREEMIUS_PROFILE` selects a non-default profile):
+
+```jsonc
+// ~/.config/freemius/config.json
+{ "profiles": { "default": { "productId": "…", "apiKey": "…", "secretKey": "…", "publicKey": "…" } } }
+```
+```bash
+claude mcp add freemius -- bun run /ABS/PATH/freemius-mcp/src/mcp/index.ts
+```
+
 **Claude Desktop** (`claude_desktop_config.json`):
 
 ```json

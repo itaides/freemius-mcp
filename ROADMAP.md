@@ -30,8 +30,9 @@ keyless experience requires a **remote (HTTP) MCP server** that implements MCP a
 **stateful** (the spec mandates third-party credentials never transit the client).
 
 Path:
-1. **Local profile (done)** — creds live once in `~/.config/freemius/config.json`; no env vars, no
-   secrets in the Claude config. Interim, but real.
+1. **Local profile (done — both surfaces)** — creds live once in `~/.config/freemius/config.json`; no
+   env vars, no secrets in the Claude config. The CLI (`--profile`) and the MCP server
+   (`FREEMIUS_PROFILE`, default `default`) both resolve it, with env taking precedence. Interim, but real.
 2. **Hosted, multi-tenant MCP (buildable)** — a remote server where the user authenticates to *our*
    service via MCP OAuth and supplies their Freemius key **once** in a web onboarding (encrypted,
    mapped to their identity); the agent never sees it. This is a real SaaS surface.
