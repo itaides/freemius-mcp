@@ -22,16 +22,34 @@ bun run dev:cli -- --help
 bun run dev:mcp        # stdio MCP server
 ```
 
-## MCP client config (after publish)
+## MCP server
+
+Exposes read-only tools: `list_subscriptions`, `get_subscription`, `list_users`, `get_user`,
+`list_payments`, `get_payment`, `list_plans`, `get_plan` (more, and writes, to come).
+
+**Wire into Claude Code (pre-publish, from source — no secrets in the config, reads your `.env`):**
+
+```bash
+claude mcp add freemius -- bun --env-file=/ABS/PATH/freemius-mcp/.env run /ABS/PATH/freemius-mcp/src/mcp/index.ts
+```
+
+**Claude Desktop** (`claude_desktop_config.json`):
 
 ```json
 {
-  "command": "npx",
-  "args": ["-y", "@eventimio/freemius-mcp"]
+  "mcpServers": {
+    "freemius": {
+      "command": "bun",
+      "args": ["--env-file=/ABS/PATH/freemius-mcp/.env", "run", "/ABS/PATH/freemius-mcp/src/mcp/index.ts"]
+    }
+  }
 }
 ```
 
-Pre-publish, point your MCP client at `node /absolute/path/to/dist/mcp/index.js` (run `bun run build` first).
+**After publish:** `{ "command": "npx", "args": ["-y", "@eventimio/freemius-mcp"] }` with the four
+`FREEMIUS_*` values supplied via the host's `env` block.
+
+Sanity-check the server end-to-end: `bun run scripts/live-mcp-check.ts`.
 
 ## Layout
 
