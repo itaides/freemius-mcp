@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { type EntityDef, getEntity, listEntity } from '../../src/core/entities.js';
 import { createFreemius } from '../../src/core/freemius.js';
-import { getEntity, listEntity, type EntityDef } from '../../src/core/entities.js';
 
 const server = setupServer();
 const fakeEnv = { FREEMIUS_PRODUCT_ID: '1', FREEMIUS_API_KEY: 'sk_test' };
@@ -14,14 +14,23 @@ afterAll(() => server.close());
 
 describe('getEntity', () => {
     it('returns ok(data) on a 2xx with an id', async () => {
-        server.use(http.get('https://fast-api.freemius.com/v1/products/1/plans/9.json', () => HttpResponse.json({ id: 9, name: 'Pro' })));
+        server.use(
+            http.get('https://fast-api.freemius.com/v1/products/1/plans/9.json', () =>
+                HttpResponse.json({ id: 9, name: 'Pro' })
+            )
+        );
 
         const { client } = createFreemius({ env: fakeEnv });
         expect(await getEntity(client, plans, '9')).toEqual({ ok: true, data: { id: 9, name: 'Pro' } });
     });
 
     it('returns err(not_found) on a 404', async () => {
-        server.use(http.get('https://fast-api.freemius.com/v1/products/1/plans/77.json', () => new HttpResponse(null, { status: 404 })));
+        server.use(
+            http.get(
+                'https://fast-api.freemius.com/v1/products/1/plans/77.json',
+                () => new HttpResponse(null, { status: 404 })
+            )
+        );
 
         const { client } = createFreemius({ env: fakeEnv });
         expect(await getEntity(client, plans, '77')).toEqual({
@@ -39,7 +48,12 @@ describe('getEntity', () => {
     });
 
     it('returns err(request_failed) on a non-404 error status', async () => {
-        server.use(http.get('https://fast-api.freemius.com/v1/products/1/plans/5.json', () => new HttpResponse(null, { status: 500 })));
+        server.use(
+            http.get(
+                'https://fast-api.freemius.com/v1/products/1/plans/5.json',
+                () => new HttpResponse(null, { status: 500 })
+            )
+        );
 
         const { client } = createFreemius({ env: fakeEnv });
         const result = await getEntity(client, plans, '5');
@@ -53,14 +67,23 @@ describe('getEntity', () => {
 
 describe('listEntity', () => {
     it('returns ok(array) on a 2xx with the list key', async () => {
-        server.use(http.get('https://fast-api.freemius.com/v1/products/1/plans.json', () => HttpResponse.json({ plans: [{ id: 9 }, { id: 10 }] })));
+        server.use(
+            http.get('https://fast-api.freemius.com/v1/products/1/plans.json', () =>
+                HttpResponse.json({ plans: [{ id: 9 }, { id: 10 }] })
+            )
+        );
 
         const { client } = createFreemius({ env: fakeEnv });
         expect(await listEntity(client, plans)).toEqual({ ok: true, data: [{ id: 9 }, { id: 10 }] });
     });
 
     it('returns err(request_failed) on a non-2xx', async () => {
-        server.use(http.get('https://fast-api.freemius.com/v1/products/1/plans.json', () => new HttpResponse(null, { status: 500 })));
+        server.use(
+            http.get(
+                'https://fast-api.freemius.com/v1/products/1/plans.json',
+                () => new HttpResponse(null, { status: 500 })
+            )
+        );
 
         const { client } = createFreemius({ env: fakeEnv });
         const result = await listEntity(client, plans);

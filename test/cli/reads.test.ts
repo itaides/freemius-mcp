@@ -1,10 +1,10 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll, vi } from 'vitest';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
 import { Command } from 'commander';
-import { createFreemius } from '../../src/core/freemius.js';
+import { HttpResponse, http } from 'msw';
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { registerReads } from '../../src/cli/commands/reads.js';
 import { READ_ENTITIES } from '../../src/core/entities.js';
+import { createFreemius } from '../../src/core/freemius.js';
 
 const server = setupServer();
 const fakeEnv = { FREEMIUS_PRODUCT_ID: '1', FREEMIUS_API_KEY: 'sk_test' };
@@ -41,7 +41,11 @@ describe('registerReads — parametrized over READ_ENTITIES', () => {
     for (const def of READ_ENTITIES) {
         describe(def.name, () => {
             it(`${def.name} list prints the rows on ok`, async () => {
-                server.use(http.get(`${BASE}/${def.name}.json`, () => HttpResponse.json({ [def.listKey]: [{ id: 1 }, { id: 2 }] })));
+                server.use(
+                    http.get(`${BASE}/${def.name}.json`, () =>
+                        HttpResponse.json({ [def.listKey]: [{ id: 1 }, { id: 2 }] })
+                    )
+                );
 
                 const { out, exitCode } = await run([def.name, 'list']);
                 expect(JSON.parse(out)).toEqual([{ id: 1 }, { id: 2 }]);

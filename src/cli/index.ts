@@ -2,12 +2,12 @@
 // (The `#!/usr/bin/env node` shebang is added at build time by scripts/build.ts.)
 
 import { Command } from 'commander';
-import { createFreemius } from '../core/freemius.js';
 import { loadProfile } from '../core/auth.js';
 import { errorEnvelope } from '../core/format.js';
+import { createFreemius } from '../core/freemius.js';
+import { registerCoupons } from './commands/coupons.js';
 import { registerReads } from './commands/reads.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
-import { registerCoupons } from './commands/coupons.js';
 
 const program = new Command();
 

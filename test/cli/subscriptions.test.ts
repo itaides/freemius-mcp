@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import { createFreemius } from '../../src/core/freemius.js';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { cancelSubscription } from '../../src/cli/commands/subscriptions.js';
+import { createFreemius } from '../../src/core/freemius.js';
 
 const server = setupServer();
 

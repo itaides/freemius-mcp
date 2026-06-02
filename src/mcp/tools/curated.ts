@@ -4,15 +4,15 @@
 // Reads are generated in a loop from READ_ENTITIES (review #6/#11): each entity gets `list_<name>`
 // and `get_<name>` built on the shared `getEntity`/`listEntity` helpers. Writes stay explicit.
 
-import { z } from 'zod';
+import type { Freemius } from '@freemius/sdk';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { Freemius } from '@freemius/sdk';
-import type { Result, ApiError } from '../../core/result.js';
-import { READ_ENTITIES, getEntity, listEntity } from '../../core/entities.js';
-import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
-import { cancelSubscription } from '../../cli/commands/subscriptions.js';
+import { z } from 'zod';
 import { createCoupon } from '../../cli/commands/coupons.js';
+import { cancelSubscription } from '../../cli/commands/subscriptions.js';
+import { getEntity, listEntity, READ_ENTITIES } from '../../core/entities.js';
+import { assertConfirmed, assertWriteEnabled } from '../../core/guards.js';
+import type { ApiError, Result } from '../../core/result.js';
 
 const listShape = {
     count: z.number().int().positive().max(50).optional().describe('page size (max 50)'),
@@ -32,7 +32,10 @@ function resultToCall<T>(result: Result<T>): CallToolResult {
 }
 
 function errorResult(error: Error): CallToolResult {
-    return { content: [{ type: 'text', text: JSON.stringify({ error: error.name, message: error.message }) }], isError: true };
+    return {
+        content: [{ type: 'text', text: JSON.stringify({ error: error.name, message: error.message }) }],
+        isError: true,
+    };
 }
 
 const readOnly = (title: string) => ({ title, readOnlyHint: true, openWorldHint: true });
@@ -45,7 +48,11 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
     for (const def of READ_ENTITIES) {
         server.registerTool(
             `list_${def.name}`,
-            { description: `List ${def.name} for the product.`, inputSchema: listShape, annotations: readOnly(`List ${def.name}`) },
+            {
+                description: `List ${def.name} for the product.`,
+                inputSchema: listShape,
+                annotations: readOnly(`List ${def.name}`),
+            },
             async ({ count, offset }) => resultToCall(await listEntity(client, def, { count, offset }))
         );
         server.registerTool(
@@ -68,7 +75,13 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 id: z.string().describe('subscription id'),
                 confirm: z.string().optional().describe('echo the subscription id to confirm this destructive action'),
             },
-            annotations: { title: 'Cancel subscription', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+            annotations: {
+                title: 'Cancel subscription',
+                readOnlyHint: false,
+                destructiveHint: true,
+                idempotentHint: true,
+                openWorldHint: true,
+            },
         },
         async ({ id, confirm }) => {
             try {
@@ -93,7 +106,13 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 discount_type: z.enum(['percentage', 'dollar']).describe("discount type: 'percentage' or 'dollar'"),
                 plans: z.array(z.string()).optional().describe('plan ids the coupon applies to (defaults to all)'),
             },
-            annotations: { title: 'Create coupon', readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+            annotations: {
+                title: 'Create coupon',
+                readOnlyHint: false,
+                destructiveHint: false,
+                idempotentHint: false,
+                openWorldHint: true,
+            },
         },
         async ({ code, discount, discount_type, plans }) => {
             try {

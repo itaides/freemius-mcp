@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-    assertWriteEnabled,
     assertConfirmed,
-    WriteNotAllowedError,
+    assertWriteEnabled,
     ConfirmationRequiredError,
+    WriteNotAllowedError,
 } from '../../src/core/guards.js';
 
 describe('assertWriteEnabled', () => {

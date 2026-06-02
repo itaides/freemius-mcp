@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
-import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { HttpResponse, http } from 'msw';
+import { setupServer } from 'msw/node';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createFreemius } from '../../src/core/freemius.js';
 import { registerCuratedTools } from '../../src/mcp/tools/curated.js';
 
@@ -33,7 +33,14 @@ describe('registerCuratedTools', () => {
         const { tools } = await client.listTools();
         const names = tools.map((t) => t.name);
 
-        for (const expected of ['list_subscriptions', 'get_subscription', 'list_users', 'list_payments', 'list_plans', 'get_plan']) {
+        for (const expected of [
+            'list_subscriptions',
+            'get_subscription',
+            'list_users',
+            'list_payments',
+            'list_plans',
+            'get_plan',
+        ]) {
             expect(names).toContain(expected);
         }
 
@@ -133,6 +140,11 @@ describe('create_coupon (write gate)', () => {
         });
 
         expect(result.isError).toBeFalsy();
-        expect(JSON.parse(textOf(result))).toEqual({ id: 42, code: 'SAVE20', discount: 20, discount_type: 'percentage' });
+        expect(JSON.parse(textOf(result))).toEqual({
+            id: 42,
+            code: 'SAVE20',
+            discount: 20,
+            discount_type: 'percentage',
+        });
     });
 });

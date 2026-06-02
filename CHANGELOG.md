@@ -27,6 +27,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unified `Result<T>`** — every handler returns `{ ok, data } | { ok: false, error }`. Reads are
   data-driven from a `READ_ENTITIES` registry (one CLI loop + one MCP loop); adding a read entity is a
   one-line registry entry.
+- **Codegen spine (spec §9)** — `bun run generate` parses `openapi.yaml` (Bun's native YAML, no dep)
+  and emits two committed artifacts: `core/catalog.ts` (the 140-operation catalog —
+  id/method/templatePath/scope/`safe`/`destructive`/params) and `core/schema.d.ts`
+  (`openapi-typescript`). Catalog metadata is derived (`safe` = GET, `destructive` = DELETE + overlay)
+  so nothing hand-classified can drift; the pure builder is unit-tested against a fixture.
+
+### Changed
+
+- **Tooling: Biome replaces ESLint + Prettier.** One fast (Rust) tool + one `biome.json` instead of
+  five deps and two configs (`eslint` / `typescript-eslint` / `@eslint/js` / `eslint-config-prettier`
+  / `prettier`). `bun run lint` → `biome check`; `bun run format` → `biome format`.
 
 ### Fixed
 

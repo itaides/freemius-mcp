@@ -1,8 +1,8 @@
 // §10 isolation smoke test: the entire engine depends on @freemius/sdk's `api.__unstable_ApiClient`.
 // This fails LOUDLY if a pinned-SDK bump renames or removes it, before it can ship broken.
 
-import { describe, it, expect } from 'vitest';
 import { Freemius } from '@freemius/sdk';
+import { describe, expect, it } from 'vitest';
 
 describe('@freemius/sdk __unstable_ApiClient (isolation seam)', () => {
     it('exposes a client with GET/POST/PUT/DELETE', () => {

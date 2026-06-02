@@ -5,13 +5,13 @@
 // The SDK's `subscription.cancel` swallows non-2xx to `null`, so we map that to an honest
 // `err('cancel_failed', …)` Result.
 
-import type { Command } from 'commander';
 import type { Freemius, SubscriptionCancellationResult } from '@freemius/sdk';
-import type { FreemiusContext } from '../../core/freemius.js';
-import { ok, err, type Result } from '../../core/result.js';
-import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
-import { withTimeout } from '../../core/timeout.js';
+import type { Command } from 'commander';
 import { errorEnvelope } from '../../core/format.js';
+import type { FreemiusContext } from '../../core/freemius.js';
+import { assertConfirmed, assertWriteEnabled } from '../../core/guards.js';
+import { err, ok, type Result } from '../../core/result.js';
+import { withTimeout } from '../../core/timeout.js';
 import { handledByDryRun } from '../cli-helpers.js';
 
 export async function cancelSubscription(

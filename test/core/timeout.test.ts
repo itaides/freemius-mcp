@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { withTimeout, TimeoutError } from '../../src/core/timeout.js';
+import { describe, expect, it } from 'vitest';
+import { TimeoutError, withTimeout } from '../../src/core/timeout.js';
 
 describe('withTimeout', () => {
     it('resolves with the value when the promise settles in time', async () => {

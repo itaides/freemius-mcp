@@ -80,8 +80,8 @@ We still get full API alignment (their auth, signing, types, pagination, webhook
 is *better* served by a clean standalone package Freemius could drop into `packages/mcp` than by a
 divergent fork — and given their active AI investment (`freemius-ai`, vibe-coding samples), an
 adoptable, blessable artifact is the goal. We own our README, issues, and release cadence. The repo
-sets up its own lightweight tooling (ESLint 9 flat config, prettier, `openapi-typescript`, `tsx`,
-changesets or plain `npm version`).
+sets up its own lightweight tooling (**Biome** for lint+format, `openapi-typescript`, Bun, plain
+`npm version` for releases).
 
 ## 3. API surface & scope boundary
 

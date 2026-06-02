@@ -4,8 +4,8 @@
 // subscriptions. On `ok` it prints `data`; on `!ok` it prints the error envelope and exits 1.
 
 import type { Command } from 'commander';
+import { getEntity, listEntity, READ_ENTITIES } from '../../core/entities.js';
 import type { FreemiusContext } from '../../core/freemius.js';
-import { READ_ENTITIES, getEntity, listEntity } from '../../core/entities.js';
 
 export function registerReads(program: Command, resolve: () => FreemiusContext): void {
     for (const def of READ_ENTITIES) {

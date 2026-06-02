@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
 import { Freemius } from '@freemius/sdk';
+import { describe, expect, it } from 'vitest';
 import { createFreemius } from '../../src/core/freemius.js';
 
 describe('createFreemius', () => {

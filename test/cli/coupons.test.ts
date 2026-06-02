@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
-import { createFreemius } from '../../src/core/freemius.js';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createCoupon } from '../../src/cli/commands/coupons.js';
+import { createFreemius } from '../../src/core/freemius.js';
 
 const server = setupServer();
 const fakeEnv = { FREEMIUS_PRODUCT_ID: '1', FREEMIUS_API_KEY: 'sk_test' };

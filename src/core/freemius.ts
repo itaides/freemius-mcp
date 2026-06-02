@@ -2,7 +2,7 @@
 // Base URL is always routed through the SDK client; we never hand-build base URLs.
 
 import { Freemius } from '@freemius/sdk';
-import { resolveCredentials, type ResolveInput } from './auth.js';
+import { type ResolveInput, resolveCredentials } from './auth.js';
 
 // The SDK's AuthService constructor throws if secretKey is missing or < 32 chars, even though
 // Bearer reads/writes never use the secret (it's only for signed URLs). So when no real secret is

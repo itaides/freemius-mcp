@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
+import { HttpResponse, http } from 'msw';
 import { setupServer } from 'msw/node';
-import { http, HttpResponse } from 'msw';
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { createFreemius } from '../../src/core/freemius.js';
 import { rawRequest } from '../../src/core/raw-client.js';
 

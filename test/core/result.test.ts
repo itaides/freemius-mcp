@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { ok, err, type Result } from '../../src/core/result.js';
+import { describe, expect, it } from 'vitest';
+import { err, ok, type Result } from '../../src/core/result.js';
 
 describe('Result', () => {
     it('ok wraps data with ok:true', () => {

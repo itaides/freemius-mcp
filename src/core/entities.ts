@@ -7,8 +7,8 @@
 // payments/subscriptions alike.
 
 import type { Freemius } from '@freemius/sdk';
-import { rawRequest, isOkStatus } from './raw-client.js';
-import { ok, err, type Result } from './result.js';
+import { isOkStatus, rawRequest } from './raw-client.js';
+import { err, ok, type Result } from './result.js';
 
 /**
  * A read entity. `name` is the (plural) API path segment + list-tool name; `listKey` the array key
@@ -31,7 +31,11 @@ export const READ_ENTITIES = [
 
 const MAX_COUNT = 50;
 
-export async function getEntity<T extends { id?: unknown }>(client: Freemius, def: EntityDef, id: string): Promise<Result<T>> {
+export async function getEntity<T extends { id?: unknown }>(
+    client: Freemius,
+    def: EntityDef,
+    id: string
+): Promise<Result<T>> {
     const result = await rawRequest<T>(client, 'GET', `/products/{product_id}/${def.name}/{id}.json`, {
         path: { product_id: client.api.productId, id },
     });
