@@ -366,6 +366,21 @@ Renovate/Dependabot watches `@freemius/sdk`, but the **exact pin** means an SDK 
 - Checkout/paywall UI (lives in `@freemius/saas-kit`).
 - Full historical analytics beyond the bounded `revenue_summary` (use the Freemius dashboard).
 
+**Future — keyless auth via a remote MCP server.** v1 is a **local stdio** server, for which the MCP
+**authorization spec (OAuth 2.1) does not apply** — OAuth is for HTTP/remote transports — so env/config
+credentials are the correct, standard pattern (same as every local MCP). A "user never pastes a key"
+experience requires shipping a **remote (HTTP) MCP server** implementing MCP authorization, where the
+server is **stateful** and **stores the credential server-side** (the spec mandates third-party creds
+never transit the client). Two shapes: (1) **hosted/multi-tenant** — the user authenticates to *our*
+service via MCP OAuth and provides their Freemius key **once** in a web onboarding (encrypted, mapped to
+their identity); the agent never sees it; or (2) **Freemius-native OAuth** — if Freemius ever exposes an
+OAuth authorization server issuing product-scoped tokens, our server brokers it via URL-mode elicitation.
+Today Freemius offers only static product API keys (+ developer 2FA login, out of scope), so (2) is
+blocked upstream and (1) is the buildable path. Either way the credential must exist somewhere — "no env
+keys" means "entered once in a UI, held server-side," not zero credentials. **Design hook (already in
+place):** `core/auth.ts` `resolveCredentials` is the single credential seam; a future
+`OAuthCredentialProvider` / server-side token store plugs in there without touching the engine.
+
 **Future — MCP Apps:** Once the core CLI/MCP is solid, an **MCP App** (sandboxed `ui://` iframe,
 `@modelcontextprotocol/ext-apps`, `postMessage` transport) is a strong fit to replace the
 `revenue_summary` text blob with an interactive **revenue dashboard**, and to offer a
