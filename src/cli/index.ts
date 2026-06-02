@@ -5,6 +5,7 @@ import { Command } from 'commander';
 import { loadProfile } from '../core/auth.js';
 import { errorEnvelope } from '../core/format.js';
 import { createFreemius } from '../core/freemius.js';
+import { registerCall } from './commands/call.js';
 import { registerCoupons } from './commands/coupons.js';
 import { registerReads } from './commands/reads.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
@@ -35,7 +36,9 @@ const resolveContext = () => {
 registerReads(program, resolveContext);
 registerSubscriptions(program, resolveContext);
 registerCoupons(program, resolveContext);
-// TODO(docs/specs §6): licenses, installs + `call` + `mcp`.
+// Generic escape hatch over the full 140-op catalog (docs/specs §5).
+registerCall(program, resolveContext);
+// TODO(docs/specs §6): licenses, installs + `mcp`.
 
 // Error boundary: parseAsync awaits async actions, so a thrown network/timeout error surfaces here as
 // a clean, secret-redacted envelope instead of an unhandled rejection with a raw stack (review #3).

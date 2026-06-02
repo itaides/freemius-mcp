@@ -19,15 +19,15 @@ const listShape = {
     offset: z.number().int().nonnegative().optional().describe('page offset'),
 };
 
-function jsonResult(data: unknown): CallToolResult {
+export function jsonResult(data: unknown): CallToolResult {
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
 }
 
-function apiErrorResult(error: ApiError): CallToolResult {
+export function apiErrorResult(error: ApiError): CallToolResult {
     return { content: [{ type: 'text', text: JSON.stringify({ error }) }], isError: true };
 }
 
-function resultToCall<T>(result: Result<T>): CallToolResult {
+export function resultToCall<T>(result: Result<T>): CallToolResult {
     return result.ok ? jsonResult(result.data) : apiErrorResult(result.error);
 }
 
