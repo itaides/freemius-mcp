@@ -4,9 +4,10 @@ import type { Command } from 'commander';
 import type { Freemius, PaymentEntity } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
 import { toGetResult, type GetResult } from '../../core/reads.js';
+import { withTimeout } from '../../core/timeout.js';
 
 export async function getPayment(client: Freemius, id: string): Promise<GetResult<PaymentEntity>> {
-    return toGetResult(await client.api.payment.retrieve(id), id);
+    return toGetResult(await withTimeout(client.api.payment.retrieve(id)), id);
 }
 
 export interface ListPaymentsOptions {
@@ -15,7 +16,7 @@ export interface ListPaymentsOptions {
 }
 
 export async function listPayments(client: Freemius, options: ListPaymentsOptions = {}): Promise<PaymentEntity[]> {
-    return client.api.payment.retrieveMany(undefined, { count: options.count, offset: options.offset });
+    return withTimeout(client.api.payment.retrieveMany(undefined, { count: options.count, offset: options.offset }));
 }
 
 export function registerPayments(program: Command, resolve: () => FreemiusContext): void {

@@ -6,9 +6,12 @@ import type { Freemius, SubscriptionEntity, SubscriptionCancellationResult } fro
 import type { FreemiusContext } from '../../core/freemius.js';
 import { toGetResult, type GetResult } from '../../core/reads.js';
 import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
+import { withTimeout } from '../../core/timeout.js';
+import { errorEnvelope } from '../../core/format.js';
+import { handledByDryRun } from '../cli-helpers.js';
 
 export async function getSubscription(client: Freemius, id: string): Promise<GetResult<SubscriptionEntity>> {
-    return toGetResult(await client.api.subscription.retrieve(id), id);
+    return toGetResult(await withTimeout(client.api.subscription.retrieve(id)), id);
 }
 
 export type CancelSubscriptionResult =
@@ -20,7 +23,7 @@ export async function cancelSubscription(
     id: string,
     options: { feedback?: string } = {}
 ): Promise<CancelSubscriptionResult> {
-    const result = await client.api.subscription.cancel(id, options.feedback);
+    const result = await withTimeout(client.api.subscription.cancel(id, options.feedback));
     return result ? { cancelled: true, data: result } : { cancelled: false, id };
 }
 
@@ -33,7 +36,7 @@ export async function listSubscriptions(
     client: Freemius,
     options: ListSubscriptionsOptions = {}
 ): Promise<SubscriptionEntity[]> {
-    return client.api.subscription.retrieveMany(undefined, { count: options.count, offset: options.offset });
+    return withTimeout(client.api.subscription.retrieveMany(undefined, { count: options.count, offset: options.offset }));
 }
 
 export function registerSubscriptions(program: Command, resolve: () => FreemiusContext): void {
@@ -72,12 +75,14 @@ export function registerSubscriptions(program: Command, resolve: () => FreemiusC
         .option('--confirm <id>', 'echo the subscription id to confirm this destructive action')
         .option('--feedback <text>', 'optional cancellation reason')
         .action(async (id: string, opts: { confirm?: string; feedback?: string }, command: Command) => {
+            if (handledByDryRun(command, { action: 'cancel_subscription', id })) {
+                return;
+            }
             try {
                 assertWriteEnabled(Boolean(command.optsWithGlobals().write));
                 assertConfirmed(id, opts.confirm);
             } catch (error) {
-                const err = error as Error;
-                console.log(JSON.stringify({ error: err.name, message: err.message }));
+                console.log(JSON.stringify(errorEnvelope(error)));
                 process.exitCode = 1;
                 return;
             }

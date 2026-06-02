@@ -5,6 +5,7 @@
 // not an interpolated string — so we forward { path, query, body } separately and never pre-substitute.
 
 import type { Freemius } from '@freemius/sdk';
+import { REQUEST_TIMEOUT_MS } from './timeout.js';
 
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
@@ -41,6 +42,8 @@ export async function rawRequest<T = unknown>(
     const result = await api[method](templatePath, {
         params: { path: args.path, query: args.query },
         body: args.body,
+        // Hard deadline so a hung connection can't block a CLI command or an MCP tool call (review #5).
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
     return {

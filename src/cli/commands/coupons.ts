@@ -7,6 +7,8 @@ import type { Freemius } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
 import { rawRequest, isOkStatus } from '../../core/raw-client.js';
 import { assertWriteEnabled } from '../../core/guards.js';
+import { errorEnvelope } from '../../core/format.js';
+import { handledByDryRun } from '../cli-helpers.js';
 
 export type CouponRow = { id: number | string; [key: string]: unknown };
 
@@ -59,11 +61,13 @@ export function registerCoupons(program: Command, resolve: () => FreemiusContext
                 opts: { code: string; discount: number; discountType: string; plans?: string[] },
                 command: Command
             ) => {
+                if (handledByDryRun(command, { action: 'create_coupon', code: opts.code, discount: opts.discount, discount_type: opts.discountType })) {
+                    return;
+                }
                 try {
                     assertWriteEnabled(Boolean(command.optsWithGlobals().write));
                 } catch (error) {
-                    const err = error as Error;
-                    console.log(JSON.stringify({ error: err.name, message: err.message }));
+                    console.log(JSON.stringify(errorEnvelope(error)));
                     process.exitCode = 1;
                     return;
                 }

@@ -3,6 +3,8 @@
 
 import { Command } from 'commander';
 import { createFreemius } from '../core/freemius.js';
+import { loadProfile } from '../core/auth.js';
+import { errorEnvelope } from '../core/format.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
 import { registerUsers } from './commands/users.js';
 import { registerPayments } from './commands/payments.js';
@@ -15,14 +17,20 @@ program
     .name('freemius')
     .description('Community CLI for the Freemius product API (unofficial)')
     .version('0.0.0')
-    .option('--json', 'machine-readable output (default)')
     .option('--product <id>', 'Freemius product id')
-    .option('--profile <name>', 'config profile')
+    .option('--profile <name>', 'config profile from ~/.config/freemius/config.json', 'default')
     .option('--write', 'enable mutating commands')
-    .option('--dry-run', 'show what would happen without calling the API');
+    .option('--dry-run', 'for mutations: print the planned request and exit without calling the API');
 
-// Lazily resolve the client only when a command runs (not at --help), honoring the global --product flag.
-const resolveContext = () => createFreemius({ flags: { productId: program.opts().product } });
+// Lazily resolve the client only when a command runs (not at --help). Honors --product and --profile,
+// keeping the precedence flags > env > profile (see core/auth.ts).
+const resolveContext = () => {
+    const opts = program.opts<{ product?: string; profile?: string }>();
+    return createFreemius({
+        flags: { productId: opts.product },
+        profile: loadProfile(opts.profile ?? 'default'),
+    });
+};
 
 registerSubscriptions(program, resolveContext);
 registerUsers(program, resolveContext);
@@ -31,4 +39,18 @@ registerPlans(program, resolveContext);
 registerCoupons(program, resolveContext);
 // TODO(docs/specs §6): licenses, installs + `call` + `mcp`.
 
-program.parse();
+// Error boundary: parseAsync awaits async actions, so a thrown network/timeout error surfaces here as
+// a clean, secret-redacted envelope instead of an unhandled rejection with a raw stack (review #3).
+async function main(): Promise<void> {
+    await program.parseAsync();
+}
+
+main().catch((error) => {
+    console.error(JSON.stringify(errorEnvelope(error)));
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+    console.error(JSON.stringify(errorEnvelope(reason)));
+    process.exit(1);
+});
