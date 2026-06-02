@@ -108,6 +108,7 @@ Sanity-check the server end-to-end: `bun run scripts/live-mcp-check.ts`.
 - [`CLAUDE.md`](./CLAUDE.md) — master index & context map (start here)
 - [`docs/specs/`](./docs/specs) — the design spec (source of truth)
 - [`CHANGELOG.md`](./CHANGELOG.md) — what's shipped
+- [`ROADMAP.md`](./ROADMAP.md) — what's next (keyless auth, MCP Apps, revenue_summary)
 
 ## License
 
