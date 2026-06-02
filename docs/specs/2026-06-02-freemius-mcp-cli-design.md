@@ -271,8 +271,20 @@ Delegated to `@freemius/sdk` — **product scope only**. Env vars:
   invoice PDF download). These do **not** unlock developer scope (corrected from the first draft).
 - `FREEMIUS_MCP_ALLOW_WRITE` — `1` to permit mutating MCP tools (default: read-only).
 
-Optional `~/.config/freemius/config.json` named profiles. Secrets are never logged and are
-redacted from error output. Developer-scope auth (login/FSA/2FA) is explicitly **out of v1**.
+**SDK constructor quirk — secret is optional for us but required by the SDK (verified against
+0.3.0).** The SDK's `AuthService` (always built by `new Freemius(...)`) throws if `secretKey` is
+absent or `< 32` chars — even though Bearer reads/writes never use the secret (it's only for signed
+URLs). So `core/freemius.ts`, when no real secret is provided, injects a ≥32-char **placeholder**
+secret/public so the client constructs for API-key operations, and exposes a `canSign` flag (true
+only when a real secret **and** public key are present). **Signed-URL operations are gated on
+`canSign`** and return a clear "FREEMIUS_SECRET_KEY/PUBLIC_KEY required for this operation" error
+rather than emitting an invalidly-signed URL. Net effect preserves the intent: api-key alone covers
+the large majority of ops; the secret is only needed for the signing minority.
+
+Optional `~/.config/freemius/config.json` named profiles (shape:
+`{ "profiles": { "<name>": { productId, apiKey, secretKey?, publicKey? } } }`; precedence
+flags > env > profile). Secrets are never logged and are redacted from error output. Developer-scope
+auth (login/FSA/2FA) is explicitly **out of v1**.
 
 ## 9. Codegen
 
