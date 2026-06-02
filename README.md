@@ -69,14 +69,9 @@ Dynamic trio (full 140-op coverage at ~3 tools): `freemius_search_tools` (find a
 `freemius_describe_tool` (its params), `freemius_execute_tool` (run it — same fail-closed write/confirm
 gate as everything else).
 
-**Wire into Claude Code (pre-publish, from source — no secrets in the config, reads your `.env`):**
-
-```bash
-claude mcp add freemius -- bun --env-file=/ABS/PATH/freemius-mcp/.env run /ABS/PATH/freemius-mcp/src/mcp/index.ts
-```
-
-**Env-free alternative** — put your keys once in `~/.config/freemius/config.json` and drop `--env-file`
-(the server reads env *or* the profile; `FREEMIUS_PROFILE` selects a non-default profile):
+**Wire into Claude Code — recommended (env-free):** put your keys once in
+`~/.config/freemius/config.json` (`chmod 600`), then register without any env. The server reads the
+profile; `FREEMIUS_PROFILE` selects a non-default one.
 
 ```jsonc
 // ~/.config/freemius/config.json
@@ -84,6 +79,13 @@ claude mcp add freemius -- bun --env-file=/ABS/PATH/freemius-mcp/.env run /ABS/P
 ```
 ```bash
 claude mcp add freemius -- bun run /ABS/PATH/freemius-mcp/src/mcp/index.ts
+```
+
+**Alternative — `.env`:** point Bun at a `.env` instead (env takes precedence over the profile;
+secrets stay in the file, never in the Claude config):
+
+```bash
+claude mcp add freemius -- bun --env-file=/ABS/PATH/freemius-mcp/.env run /ABS/PATH/freemius-mcp/src/mcp/index.ts
 ```
 
 **Claude Desktop** (`claude_desktop_config.json`):
