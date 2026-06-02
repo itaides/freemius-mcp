@@ -2,6 +2,8 @@
 // (The `#!/usr/bin/env node` shebang is added at build time by scripts/build.ts.)
 
 import { Command } from 'commander';
+import { createFreemius } from '../core/freemius.js';
+import { registerSubscriptions } from './commands/subscriptions.js';
 
 const program = new Command();
 
@@ -15,6 +17,10 @@ program
     .option('--write', 'enable mutating commands')
     .option('--dry-run', 'show what would happen without calling the API');
 
-// TODO(docs/specs §6): register subscriptions/licenses/users/installs/payments/plans/coupons + `call` + `mcp`.
+// Lazily resolve the client only when a command runs (not at --help), honoring the global --product flag.
+const resolveContext = () => createFreemius({ flags: { productId: program.opts().product } });
+
+registerSubscriptions(program, resolveContext);
+// TODO(docs/specs §6): licenses, users, installs, payments, plans, coupons + `call` + `mcp`.
 
 program.parse();
