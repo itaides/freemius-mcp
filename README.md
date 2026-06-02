@@ -11,7 +11,20 @@ ergonomic control of a Freemius **product** — built on the official [`@freemiu
 
 ## Status
 
-🚧 Early scaffold. The engine is being implemented against the design spec.
+🚧 In active development. Auth, the curated read surface, and the first guarded write are live and
+verified against a real product. See [`CHANGELOG.md`](./CHANGELOG.md).
+
+## Authentication
+
+Product-scope only — four values from your Freemius dashboard (Developer → product → Settings → Keys):
+
+| Env var | Required | Purpose |
+|---|---|---|
+| `FREEMIUS_PRODUCT_ID` | ✅ | Which product to operate on |
+| `FREEMIUS_API_KEY` | ✅ | Bearer token — covers the large majority of reads and writes |
+| `FREEMIUS_SECRET_KEY` | optional | HMAC signed URLs (e.g. invoice download); must be ≥ 32 chars |
+| `FREEMIUS_PUBLIC_KEY` | optional | Pairs with the secret for signing |
+| `FREEMIUS_MCP_ALLOW_WRITE` | optional | `1` to allow mutating MCP tools (default: read-only) |
 
 ## Quick start (development)
 
@@ -22,10 +35,27 @@ bun run dev:cli -- --help
 bun run dev:mcp        # stdio MCP server
 ```
 
+## CLI
+
+```bash
+freemius subscriptions list|get <id>
+freemius users         list|get <id>
+freemius payments      list|get <id>
+freemius plans         list|get <id>            # read-only
+
+# writes require --write; destructive ones also require --confirm <id>
+freemius --write subscriptions cancel <id> --confirm <id>
+```
+
+Global flags: `--json` (default), `--product <id>`, `--profile <name>`, `--write`, `--dry-run`.
+
 ## MCP server
 
-Exposes read-only tools: `list_subscriptions`, `get_subscription`, `list_users`, `get_user`,
-`list_payments`, `get_payment`, `list_plans`, `get_plan` (more, and writes, to come).
+Read tools (always on): `list_subscriptions`, `get_subscription`, `list_users`, `get_user`,
+`list_payments`, `get_payment`, `list_plans`, `get_plan`.
+
+Write tools (gated): `cancel_subscription` — refused unless `FREEMIUS_MCP_ALLOW_WRITE=1` **and** a
+`confirm` arg echoes the target id. More writes (`create_coupon`, …) to come.
 
 **Wire into Claude Code (pre-publish, from source — no secrets in the config, reads your `.env`):**
 
@@ -55,12 +85,18 @@ Sanity-check the server end-to-end: `bun run scripts/live-mcp-check.ts`.
 
 | Path | What |
 |------|------|
-| `src/core/` | Shared engine — both bins use it (auth, raw client, execute, guards, codegen artifacts) |
+| `src/core/` | Shared engine — both bins use it (auth, raw client, reads, guards, codegen artifacts) |
 | `src/cli/` | `commander` → `freemius` bin |
 | `src/mcp/` | `@modelcontextprotocol/sdk` stdio server → `freemius-mcp` bin |
-| `scripts/` | `generate.ts` (codegen), `fetch-spec.ts`, `build.ts` |
+| `scripts/` | `generate.ts` (codegen), `fetch-spec.ts`, `build.ts`, live-check scripts |
 | `docs/` | Design spec + implementation plan |
+
+## Documentation
+
+- [`CLAUDE.md`](./CLAUDE.md) — master index & context map (start here)
+- [`docs/specs/`](./docs/specs) — the design spec (source of truth)
+- [`CHANGELOG.md`](./CHANGELOG.md) — what's shipped
 
 ## License
 
-MIT
+MIT — community / unofficial, not affiliated with Freemius.
