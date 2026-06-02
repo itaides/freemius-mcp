@@ -11,11 +11,12 @@ ergonomic control of a Freemius **product** — built on the official [`@freemiu
 
 ## Status
 
-✅ **v1 — working.** The CLI and MCP server are live and verified against a real product: curated
-reads (subscriptions, users, payments, plans) and guarded writes (`cancel_subscription`,
-`create_coupon`), all read-only by default. Built on a unified `Result<T>` engine with request
-timeouts, secret redaction, and a generated 140-operation catalog. The generic long-tail — a `call`
-command and the dynamic MCP trio over all 140 ops — is the next milestone. See
+✅ **v1 — working, full coverage.** The CLI and MCP server are live and verified against a real
+product: curated reads (subscriptions, users, payments, plans) + guarded writes
+(`cancel_subscription`, `create_coupon`), **plus a generic long-tail** — `freemius call <op>` and the
+dynamic MCP trio (`search`/`describe`/`execute`) — that reaches **all 140 operations** through one
+fail-closed `execute` runner. Built on a unified `Result<T>` engine with request timeouts, secret
+redaction, and a generated operation catalog. Read-only by default. See
 [`CHANGELOG.md`](./CHANGELOG.md) and the [implementation plan](./docs/plans).
 
 ## Authentication
@@ -63,6 +64,10 @@ Read tools (always on): `list_subscriptions`, `get_subscription`, `list_users`, 
 Write tools (gated, off by default): set `FREEMIUS_MCP_ALLOW_WRITE=1` to enable —
 - `cancel_subscription` — **destructive**; also requires a `confirm` arg echoing the subscription id.
 - `create_coupon` — needs write mode (not destructive, no confirm).
+
+Dynamic trio (full 140-op coverage at ~3 tools): `freemius_search_tools` (find an operation),
+`freemius_describe_tool` (its params), `freemius_execute_tool` (run it — same fail-closed write/confirm
+gate as everything else).
 
 **Wire into Claude Code (pre-publish, from source — no secrets in the config, reads your `.env`):**
 

@@ -26,7 +26,7 @@ ergonomic control of a Freemius **product** — like Stripe/Polar ship official 
 | Topic | Document | Description |
 | :--- | :--- | :--- |
 | **Design spec** | [`docs/specs/2026-06-02-freemius-mcp-cli-design.md`](docs/specs/2026-06-02-freemius-mcp-cli-design.md) | The source of truth. Scope, auth, safety model, codegen, revenue_summary, §-numbered. Current. |
-| **Implementation plan** | [`docs/plans/2026-06-02-freemius-mcp-cli.md`](docs/plans/2026-06-02-freemius-mcp-cli.md) | Reconciled 2026-06-03: status map of what's built + roadmap for the remaining codegen spine (`execute`, `call`, dynamic trio, `revenue_summary`). |
+| **Implementation plan** | [`docs/plans/2026-06-02-freemius-mcp-cli.md`](docs/plans/2026-06-02-freemius-mcp-cli.md) | Reconciled status map. Codegen + `execute` + `call` + dynamic trio now done; remaining: `revenue_summary`, output truncation, more curated reads. |
 | **Changes** | [`CHANGELOG.md`](CHANGELOG.md) | What's shipped so far. |
 | **Usage** | [`README.md`](README.md) | Quick start, MCP wiring, command/tool list. |
 | **Build helpers** | [`.claude/skills/freemius-mcp-engineer/`](.claude/skills/freemius-mcp-engineer/SKILL.md) + [`.claude/agents/freemius-surgeon.md`](.claude/agents/freemius-surgeon.md) | Project skill (recipes for adding entities/writes/MCP tools) and a TDD-first implementer subagent. Invoke the skill before non-trivial changes. |

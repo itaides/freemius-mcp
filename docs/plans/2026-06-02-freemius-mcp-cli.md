@@ -3,8 +3,9 @@
 - **Original:** 2026-06-02 (task-by-task plan, since overtaken by the build)
 - **Reconciled:** 2026-06-03 against the shipped code and the current
   [design spec](../specs/2026-06-02-freemius-mcp-cli-design.md) + [CLAUDE.md](../../CLAUDE.md)
-- **Status:** Phases 0, 2–4 substantially **done** (differently from the original); the **codegen
-  spine and everything downstream of it remain**.
+- **Status:** v1 **complete** — phases 0–4 done (differently from the original), including the codegen
+  spine, `execute`, the `call` command, and the dynamic MCP trio (full 140-op coverage). Remaining:
+  `revenue_summary`, request-body validation, output truncation, a few curated reads.
 
 > The original plan assumed a build that no longer exists. This document records what was actually
 > built, why it diverged, and the remaining work expressed in current conventions. The spec is the
@@ -27,51 +28,37 @@
 | **P0** Scaffold | ✅ done (standalone, Bun) | repo root, `package.json`, `scripts/build.ts` |
 | **P2 T3** Config + client (`canSign`) | ✅ done | `core/auth.ts`, `core/freemius.ts` |
 | **P2 T4** raw-client seam + smoke test | ✅ done | `core/raw-client.ts`, `test/sdk-isolation.test.ts` |
-| **P2 T5** param validation + generic `execute` | ⬜ **remaining** (needs codegen) | `core/execute.ts` is a stub |
+| **P2 T5** param validation + generic `execute` | ✅ done (path/query presence; body validation deferred) | `core/execute.ts` |
 | **P2 T6** output formatting | ⚠️ partial — redaction done, **truncation not** | `core/format.ts` |
 | **P3 T7** CLI skeleton + error boundary | ✅ done (no `mcp` launcher subcommand) | `cli/index.ts` |
 | **P3 T8** data-driven reads + guarded writes | ✅ done (registry + `Result`) | `cli/commands/reads.ts`, `subscriptions.ts`, `coupons.ts`, `core/entities.ts` |
-| **P3 T9** generic `call` command | ⬜ **remaining** (needs catalog) | — |
-| **P1 T2** codegen (catalog/validators/schema) | ⬜ **remaining** — stubs only | `scripts/generate.ts`, `core/{catalog,validators,schema}.ts` |
+| **P3 T9** generic `call` command | ✅ done | `cli/commands/call.ts` |
+| **P1 T2** codegen (catalog + schema) | ✅ done (validators folded into the catalog) | `scripts/generate.ts`, `core/catalog.ts`, `core/schema.d.ts` |
 | **P4 T10** MCP skeleton + registration | ✅ done | `mcp/index.ts` |
 | **P4 T11** curated tools | ✅ done **minus `revenue_summary`** | `mcp/tools/curated.ts` |
-| **P4 T12** dynamic trio (search/describe/execute) | ⬜ **remaining** (needs catalog) | `mcp/tools/dynamic.ts` is a no-op stub |
+| **P4 T12** dynamic trio (search/describe/execute) | ✅ done | `mcp/tools/dynamic.ts` |
 | **P5 T13/T14** smoke, docs | ✅ done | `scripts/live-*.ts`, `README.md`, `CHANGELOG.md` |
 
-## Remaining work (in dependency order)
+## Remaining work
 
-Everything below the codegen spine depends on it — do the spine first.
+The codegen spine, `execute`, the `call` command, and the dynamic MCP trio are **done** (✅ above) —
+full 140-op coverage ships. What's left:
 
-### 1. Codegen spine — `scripts/generate.ts` (spec §9)
-The linchpin. Produces three committed artifacts from a vendored `openapi.yaml`:
-- `core/schema.d.ts` — `openapi-typescript` compile-time types.
-- `core/catalog.ts` — the 140-op catalog `{ id, method, templatePath, scope, summary, safe, destructive }`.
-  `safe`/`destructive` are a **hand-curated overlay** merged onto generated rows; **fail the build if any
-  op id is unclassified** (fail-closed, spec §7).
-- `core/validators.ts` — **runtime validators**. Repo is zod v4; `openapi-zod-client` emits v3, so use a
-  zod-v4-native generator **or** JSON-Schema + `ajv`. Acceptance: round-trips a sample payload (spec §9).
-- Single-source check: vendored spec pinned by hash to the SDK's upstream spec URL; CI fails on drift.
-
-### 2. `core/execute.ts` — generic runner (spec §5)
-`execute(operationId, params, ctx)`: catalog lookup → reject developer-scope ops → **validate params** →
-**fail-closed write gate** (any non-GET refused unless `writeEnabled`; `destructive` needs confirm) →
-`rawRequest` with the **template** path → map errors to `Result`/`FreemiusApiError` → bounded pagination.
-Returns `Result<T>` like everything else.
-
-### 3. CLI `call` command (spec §6) + MCP dynamic trio (spec §7)
-- `freemius call <operationId> --param k=v --json '{…}'` → `execute`.
-- `freemius_search_tools` (fuzzy over catalog) / `freemius_describe_tool` (**shallow-resolved,
-  size-bounded** schema) / `freemius_execute_tool` (validate + guard + run). Wire into `mcp/tools/dynamic.ts`.
-
-### 4. `revenue_summary` (spec §7 — the two correctness rules are non-negotiable)
+### 1. `revenue_summary` (spec §7 — the two correctness rules are non-negotiable)
 Bounded client-side aggregation. **Do not use `iterateAll`** — its own pager that distinguishes an empty
 successful page (stop) from a failed page (**throw / flag `partial`**, never silently truncate). **Group by
 currency**, never sum across. MRR deferred. (`Result`-shaped.)
 
-### 5. Smaller follow-ups
+### 2. Request-body validation for `execute`
+The catalog carries `requestBodyProps` (names) but no per-field `required`/type, so `execute` presence-checks
+path/query only; malformed bodies surface as the API's own 4xx. Add JSON-Schema-per-op (from the OpenAPI
+request bodies) + `ajv` to validate bodies before sending (spec §9 acceptance: round-trip a sample payload).
+
+### 3. Smaller follow-ups
 - `core/format.ts` **list truncation** with a `…(N more, use --offset)` footer + a hard `--all` page cap.
 - More curated reads — `licenses`, `coupons` (read) — each a **one-line `READ_ENTITIES` entry** now.
 - Optional `freemius mcp` launcher subcommand (parity with the `freemius-mcp` bin).
+- Single-source check: pin `openapi.yaml` by hash to the SDK's upstream spec URL; CI fails on drift.
 
 ## Conventions (current — supersede the original "Conventions for every task")
 

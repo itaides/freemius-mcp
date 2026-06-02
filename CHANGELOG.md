@@ -32,6 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   id/method/templatePath/scope/`safe`/`destructive`/params) and `core/schema.d.ts`
   (`openapi-typescript`). Catalog metadata is derived (`safe` = GET, `destructive` = DELETE + overlay)
   so nothing hand-classified can drift; the pure builder is unit-tested against a fixture.
+- **Generic long-tail — full 140-operation coverage (spec §5/§7).** One `execute()` runner enforces the
+  whole safety model in a single place (unknown-op → scope check → **fail-closed** write gate →
+  destructive `confirm` → required-param presence) and returns `Result<unknown>`. Both surfaces funnel
+  through it: the CLI `freemius call <op> --param k=v --json '{…}' [--confirm]` (honors `--dry-run`) and
+  the MCP dynamic trio `freemius_search_tools` / `freemius_describe_tool` / `freemius_execute_tool`.
+  Known limitation: request-body fields are not yet schema-validated (path/query presence only).
 
 ### Changed
 
