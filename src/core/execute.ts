@@ -6,7 +6,9 @@
 //   5. map { error: { code, message } } → FreemiusApiError (raw path only)
 //   6. paginate only when requested, with a hard page cap (§9)
 
-import type { GuardContext } from './guards.js';
+export interface ExecuteContext {
+    writeEnabled: boolean;
+}
 
 export interface ExecuteResult {
     data: unknown;
@@ -17,7 +19,7 @@ export interface ExecuteResult {
 export async function execute(
     _operationId: string,
     _params: Record<string, unknown>,
-    _ctx: GuardContext
+    _ctx: ExecuteContext
 ): Promise<ExecuteResult> {
     throw new Error('execute.execute: not implemented — see docs/specs §5');
 }

@@ -2,12 +2,26 @@
 // Curated-error contract (§5): a missing result surfaces a clear not-found rather than a bare null.
 
 import type { Command } from 'commander';
-import type { Freemius, SubscriptionEntity } from '@freemius/sdk';
+import type { Freemius, SubscriptionEntity, SubscriptionCancellationResult } from '@freemius/sdk';
 import type { FreemiusContext } from '../../core/freemius.js';
 import { toGetResult, type GetResult } from '../../core/reads.js';
+import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
 
 export async function getSubscription(client: Freemius, id: string): Promise<GetResult<SubscriptionEntity>> {
     return toGetResult(await client.api.subscription.retrieve(id), id);
+}
+
+export type CancelSubscriptionResult =
+    | { cancelled: true; data: SubscriptionCancellationResult }
+    | { cancelled: false; id: string };
+
+export async function cancelSubscription(
+    client: Freemius,
+    id: string,
+    options: { feedback?: string } = {}
+): Promise<CancelSubscriptionResult> {
+    const result = await client.api.subscription.cancel(id, options.feedback);
+    return result ? { cancelled: true, data: result } : { cancelled: false, id };
 }
 
 export interface ListSubscriptionsOptions {
@@ -49,5 +63,33 @@ export function registerSubscriptions(program: Command, resolve: () => FreemiusC
         .action(async (opts: { count?: number; offset?: number }) => {
             const subs = await listSubscriptions(resolve().client, opts);
             console.log(JSON.stringify(subs, null, 2));
+        });
+
+    subscriptions
+        .command('cancel')
+        .argument('<id>', 'subscription id')
+        .description('Cancel a subscription (destructive; requires --write and --confirm)')
+        .option('--confirm <id>', 'echo the subscription id to confirm this destructive action')
+        .option('--feedback <text>', 'optional cancellation reason')
+        .action(async (id: string, opts: { confirm?: string; feedback?: string }, command: Command) => {
+            try {
+                assertWriteEnabled(Boolean(command.optsWithGlobals().write));
+                assertConfirmed(id, opts.confirm);
+            } catch (error) {
+                const err = error as Error;
+                console.log(JSON.stringify({ error: err.name, message: err.message }));
+                process.exitCode = 1;
+                return;
+            }
+
+            const result = await cancelSubscription(resolve().client, id, { feedback: opts.feedback });
+
+            if (!result.cancelled) {
+                console.log(JSON.stringify({ error: 'cancel_failed', resource: 'subscription', id: result.id }));
+                process.exitCode = 1;
+                return;
+            }
+
+            console.log(JSON.stringify(result.data, null, 2));
         });
 }

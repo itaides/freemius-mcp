@@ -9,12 +9,13 @@ import { registerCuratedTools } from './tools/curated.js';
 
 async function main(): Promise<void> {
     const { client } = createFreemius();
+    const writeEnabled = process.env.FREEMIUS_MCP_ALLOW_WRITE === '1';
 
     const server = new McpServer({ name: 'freemius-mcp', version: '0.0.0' });
-    registerCuratedTools(server, client);
+    registerCuratedTools(server, client, { writeEnabled });
 
     await server.connect(new StdioServerTransport());
-    console.error('freemius-mcp running on stdio (read-only)');
+    console.error(`freemius-mcp running on stdio (${writeEnabled ? 'WRITE ENABLED' : 'read-only'})`);
 }
 
 main().catch((err) => {

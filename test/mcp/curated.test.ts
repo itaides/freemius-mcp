@@ -12,15 +12,19 @@ beforeAll(() => msw.listen({ onUnhandledRequest: 'error' }));
 afterEach(() => msw.resetHandlers());
 afterAll(() => msw.close());
 
-async function connectClient(): Promise<Client> {
+async function connectClient(writeEnabled = false): Promise<Client> {
     const { client: freemius } = createFreemius({ env: { FREEMIUS_PRODUCT_ID: '1', FREEMIUS_API_KEY: 'sk_test' } });
     const server = new McpServer({ name: 'test', version: '0.0.0' });
-    registerCuratedTools(server, freemius);
+    registerCuratedTools(server, freemius, { writeEnabled });
 
     const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
     const client = new Client({ name: 'test-client', version: '0.0.0' });
     await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
     return client;
+}
+
+function textOf(result: Awaited<ReturnType<Client['callTool']>>): string {
+    return (result.content as Array<{ type: string; text: string }>)[0]?.text ?? '';
 }
 
 describe('registerCuratedTools', () => {
@@ -46,8 +50,49 @@ describe('registerCuratedTools', () => {
 
         const client = await connectClient();
         const result = await client.callTool({ name: 'list_plans', arguments: {} });
-        const content = result.content as Array<{ type: string; text: string }>;
 
-        expect(JSON.parse(content[0]?.text ?? 'null')).toEqual([{ id: 9, name: 'Pro' }]);
+        expect(JSON.parse(textOf(result) || 'null')).toEqual([{ id: 9, name: 'Pro' }]);
+    });
+});
+
+describe('cancel_subscription (write gate)', () => {
+    it('is present and annotated destructive', async () => {
+        const client = await connectClient(false);
+        const tools = (await client.listTools()).tools;
+        const cancel = tools.find((t) => t.name === 'cancel_subscription');
+
+        expect(cancel).toBeDefined();
+        expect(cancel?.annotations?.destructiveHint).toBe(true);
+        expect(cancel?.annotations?.readOnlyHint).toBe(false);
+    });
+
+    it('is refused when write mode is off (fail-closed)', async () => {
+        const client = await connectClient(false);
+        const result = await client.callTool({ name: 'cancel_subscription', arguments: { id: '5', confirm: '5' } });
+
+        expect(result.isError).toBe(true);
+        expect(JSON.parse(textOf(result)).error).toBe('WriteNotAllowedError');
+    });
+
+    it('requires a matching confirm even with write mode on', async () => {
+        const client = await connectClient(true);
+        const result = await client.callTool({ name: 'cancel_subscription', arguments: { id: '5' } });
+
+        expect(result.isError).toBe(true);
+        expect(JSON.parse(textOf(result)).error).toBe('ConfirmationRequiredError');
+    });
+
+    it('cancels when write mode is on and confirm matches', async () => {
+        msw.use(
+            http.delete('https://fast-api.freemius.com/v1/products/1/subscriptions/5.json', () =>
+                HttpResponse.json({ id: 5, is_canceled: true })
+            )
+        );
+
+        const client = await connectClient(true);
+        const result = await client.callTool({ name: 'cancel_subscription', arguments: { id: '5', confirm: '5' } });
+
+        expect(result.isError).toBeFalsy();
+        expect(JSON.parse(textOf(result))).toEqual({ id: 5, is_canceled: true });
     });
 });

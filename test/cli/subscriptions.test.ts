@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
 import { setupServer } from 'msw/node';
 import { http, HttpResponse } from 'msw';
 import { createFreemius } from '../../src/core/freemius.js';
-import { getSubscription, listSubscriptions } from '../../src/cli/commands/subscriptions.js';
+import { getSubscription, listSubscriptions, cancelSubscription } from '../../src/cli/commands/subscriptions.js';
 
 const server = setupServer();
 
@@ -41,5 +41,25 @@ describe('listSubscriptions', () => {
         const result = await listSubscriptions(client);
 
         expect(result).toEqual([{ id: 1 }, { id: 2 }]);
+    });
+});
+
+describe('cancelSubscription', () => {
+    it('cancels via DELETE and returns the result', async () => {
+        server.use(http.delete(`${BASE}/123.json`, () => HttpResponse.json({ id: 123, is_canceled: true })));
+
+        const { client } = createFreemius({ env: fakeEnv });
+        const result = await cancelSubscription(client, '123');
+
+        expect(result).toEqual({ cancelled: true, data: { id: 123, is_canceled: true } });
+    });
+
+    it('reports failure when the API returns no result', async () => {
+        server.use(http.delete(`${BASE}/999.json`, () => new HttpResponse(null, { status: 404 })));
+
+        const { client } = createFreemius({ env: fakeEnv });
+        const result = await cancelSubscription(client, '999');
+
+        expect(result).toEqual({ cancelled: false, id: '999' });
     });
 });

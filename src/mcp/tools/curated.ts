@@ -6,7 +6,8 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { Freemius } from '@freemius/sdk';
 import type { GetResult } from '../../core/reads.js';
-import { getSubscription, listSubscriptions } from '../../cli/commands/subscriptions.js';
+import { assertWriteEnabled, assertConfirmed } from '../../core/guards.js';
+import { getSubscription, listSubscriptions, cancelSubscription } from '../../cli/commands/subscriptions.js';
 import { getUser, listUsers } from '../../cli/commands/users.js';
 import { getPayment, listPayments } from '../../cli/commands/payments.js';
 import { getPlan, listPlans } from '../../cli/commands/plans.js';
@@ -34,9 +35,17 @@ function getResult<T>(result: GetResult<T>, resource: string): CallToolResult {
     return jsonResult(result.data);
 }
 
+function errorResult(error: Error): CallToolResult {
+    return { content: [{ type: 'text', text: JSON.stringify({ error: error.name, message: error.message }) }], isError: true };
+}
+
 const readOnly = (title: string) => ({ title, readOnlyHint: true, openWorldHint: true });
 
-export function registerCuratedTools(server: McpServer, client: Freemius): void {
+export interface CuratedToolOptions {
+    writeEnabled: boolean;
+}
+
+export function registerCuratedTools(server: McpServer, client: Freemius, options: CuratedToolOptions): void {
     server.registerTool(
         'list_subscriptions',
         { description: 'List subscriptions for the product.', inputSchema: listShape, annotations: readOnly('List subscriptions') },
@@ -46,6 +55,32 @@ export function registerCuratedTools(server: McpServer, client: Freemius): void 
         'get_subscription',
         { description: 'Get a subscription by id.', inputSchema: idShape('subscription'), annotations: readOnly('Get subscription') },
         async ({ id }) => getResult(await getSubscription(client, id), 'subscription')
+    );
+    server.registerTool(
+        'cancel_subscription',
+        {
+            description:
+                'Cancel a subscription. DESTRUCTIVE. Requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1) and a `confirm` arg echoing the subscription id.',
+            inputSchema: {
+                id: z.string().describe('subscription id'),
+                confirm: z.string().optional().describe('echo the subscription id to confirm this destructive action'),
+            },
+            annotations: { title: 'Cancel subscription', readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true },
+        },
+        async ({ id, confirm }) => {
+            try {
+                assertWriteEnabled(options.writeEnabled);
+                assertConfirmed(id, confirm);
+            } catch (error) {
+                return errorResult(error as Error);
+            }
+
+            const result = await cancelSubscription(client, id);
+            if (!result.cancelled) {
+                return errorResult(Object.assign(new Error(`Subscription ${id} could not be cancelled`), { name: 'cancel_failed' }));
+            }
+            return jsonResult(result.data);
+        }
     );
 
     server.registerTool(
