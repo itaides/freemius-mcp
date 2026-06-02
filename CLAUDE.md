@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 > **Master Index & Context Map**
 > Entry point for understanding the **`@eventimio/freemius-mcp`** codebase. This file plus one
 > linked document should be enough context for most tasks.
@@ -36,7 +38,10 @@ cp .env.example .env        # fill FREEMIUS_PRODUCT_ID + FREEMIUS_API_KEY (+ opt
 bun run dev:cli -- --help   # CLI
 bun run dev:mcp             # MCP server (stdio)
 
-bun run test                # vitest (msw-mocked, no live API)
+bun run test                # full vitest run (msw-mocked, no live API)
+bun run vitest run test/core/auth.test.ts          # a single test file
+bun run vitest run -t "throws when write mode is off"   # a single test by name
+bun run vitest                                      # watch mode
 bun run typecheck && bun run lint
 bun run build               # bun bundler → dist/{cli,mcp}/index.js (node-compatible bins)
 
