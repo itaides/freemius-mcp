@@ -7,3 +7,6 @@ dist/
 !.env.example
 coverage/
 openapi.yaml
+
+# local Claude settings (not committed)
+.claude/settings.local.json

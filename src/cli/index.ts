@@ -9,6 +9,7 @@ import { VERSION } from '../core/version.js';
 import { registerCall } from './commands/call.js';
 import { registerCoupons } from './commands/coupons.js';
 import { registerReads } from './commands/reads.js';
+import { registerRevenue } from './commands/revenue.js';
 import { registerSubscriptions } from './commands/subscriptions.js';
 
 const program = new Command();
@@ -37,6 +38,7 @@ const resolveContext = () => {
 registerReads(program, resolveContext);
 registerSubscriptions(program, resolveContext);
 registerCoupons(program, resolveContext);
+registerRevenue(program, resolveContext);
 // Generic escape hatch over the full 140-op catalog (docs/specs §5).
 registerCall(program, resolveContext);
 // TODO(docs/specs §6): licenses, installs + `mcp`.

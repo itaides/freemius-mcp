@@ -62,6 +62,41 @@ describe('registerCuratedTools', () => {
     });
 });
 
+describe('revenue_summary (read-only)', () => {
+    it('is exposed as a read-only tool', async () => {
+        const client = await connectClient();
+        const tools = (await client.listTools()).tools;
+        const revenue = tools.find((t) => t.name === 'revenue_summary');
+
+        expect(revenue).toBeDefined();
+        expect(revenue?.annotations?.readOnlyHint).toBe(true);
+    });
+
+    it('aggregates payments by currency through the tool call', async () => {
+        msw.use(
+            http.get('https://fast-api.freemius.com/v1/products/1/payments.json', () =>
+                HttpResponse.json({
+                    payments: [
+                        { gross: 100, currency: 'usd', type: 'payment' },
+                        { gross: 50, currency: 'eur', type: 'payment' },
+                    ],
+                })
+            )
+        );
+
+        const client = await connectClient();
+        const result = await client.callTool({
+            name: 'revenue_summary',
+            arguments: { from: '2026-01-01 00:00:00', to: '2026-04-01 00:00:00' },
+        });
+
+        expect(result.isError).toBeFalsy();
+        const data = JSON.parse(textOf(result));
+        expect(data.byCurrency.usd).toEqual({ gross: 100, refunds: 0, net: 100, count: 1 });
+        expect(data.byCurrency.eur).toEqual({ gross: 50, refunds: 0, net: 50, count: 1 });
+    });
+});
+
 describe('cancel_subscription (write gate)', () => {
     it('is present and annotated destructive', async () => {
         const client = await connectClient(false);
