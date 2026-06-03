@@ -11,13 +11,13 @@ ergonomic control of a Freemius **product** — built on the official [`@freemiu
 
 ## Status
 
-✅ **v1 — working, full coverage.** The CLI and MCP server are live and verified against a real
-product: curated reads (subscriptions, users, payments, plans) + guarded writes
-(`cancel_subscription`, `create_coupon`), **plus a generic long-tail** — `freemius call <op>` and the
-dynamic MCP trio (`search`/`describe`/`execute`) — that reaches **all 140 operations** through one
-fail-closed `execute` runner. Built on a unified `Result<T>` engine with request timeouts, secret
-redaction, and a generated operation catalog. Read-only by default. See
-[`CHANGELOG.md`](./CHANGELOG.md) and the [implementation plan](./docs/plans).
+✅ **v0.1.0 — working, full coverage** (tagged; not yet on npm). The CLI and MCP server are live and
+verified against a real product: curated reads (subscriptions, users, payments, plans) + guarded
+writes (`cancel_subscription`, `create_coupon`) + a bounded per-currency **`revenue_summary`**, **plus
+a generic long-tail** — `freemius call <op>` and the dynamic MCP trio (`search`/`describe`/`execute`)
+— that reaches **all 140 operations** through one fail-closed `execute` runner. Built on a unified
+`Result<T>` engine with request timeouts, secret redaction, and a generated operation catalog.
+Read-only by default. See [`CHANGELOG.md`](./CHANGELOG.md) and the [`ROADMAP.md`](./ROADMAP.md).
 
 ## Authentication
 
@@ -47,6 +47,10 @@ freemius subscriptions list|get <id>
 freemius users         list|get <id>
 freemius payments      list|get <id>
 freemius plans         list|get <id>
+freemius revenue-summary [--days 90] [--from <ts>] [--to <ts>]   # per-currency gross/refunds/net
+
+# generic escape hatch over all 140 operations
+freemius call <operationId> --param k=v --json '{…}'
 
 # writes require --write; destructive ones also require --confirm <id>
 freemius --write subscriptions cancel <id> --confirm <id>
@@ -59,7 +63,7 @@ needed), `--write`, `--dry-run` (preview a mutation without calling the API).
 ## MCP server
 
 Read tools (always on): `list_subscriptions`, `get_subscription`, `list_users`, `get_user`,
-`list_payments`, `get_payment`, `list_plans`, `get_plan`.
+`list_payments`, `get_payment`, `list_plans`, `get_plan`, `revenue_summary`.
 
 Write tools (gated, off by default): set `FREEMIUS_MCP_ALLOW_WRITE=1` to enable —
 - `cancel_subscription` — **destructive**; also requires a `confirm` arg echoing the subscription id.
