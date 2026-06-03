@@ -30,7 +30,7 @@ ergonomic control of a Freemius **product** — like Stripe/Polar ship official 
 | **Changes** | [`CHANGELOG.md`](CHANGELOG.md) | What's shipped so far. |
 | **Roadmap** | [`ROADMAP.md`](ROADMAP.md) | What's next: near-term (`revenue_summary`, body validation), keyless auth (remote MCP + OAuth), MCP Apps (interactive UI). |
 | **Usage** | [`README.md`](README.md) | Quick start, MCP wiring, tool table, example prompts. |
-| **Agent onboarding** | [`AGENTS.md`](AGENTS.md) | [agents.md](https://agents.md/) standard — setup/test/lint commands, code style, architecture invariants, gotchas (vendor-neutral; complements this file). |
+| **Agent usage** | [`AGENTS.md`](AGENTS.md) | [agents.md](https://agents.md/)-style guide for agents/users **operating** the product via the CLI/MCP (which tools, the read-only/write/confirm safety model, reading results). Not a dev guide — this file is. |
 | **Build helpers** | [`.claude/skills/freemius-mcp-engineer/`](.claude/skills/freemius-mcp-engineer/SKILL.md) + [`.claude/agents/freemius-surgeon.md`](.claude/agents/freemius-surgeon.md) | Project skill (recipes for adding entities/writes/MCP tools) and a TDD-first implementer subagent. Invoke the skill before non-trivial changes. |
 | **Use the MCP** | [`.claude/skills/freemius-revenue-report/`](.claude/skills/freemius-revenue-report/SKILL.md), [`.claude/skills/freemius-customer-lookup/`](.claude/skills/freemius-customer-lookup/SKILL.md) | Usage skills that drive the connected `freemius` MCP server (per-currency revenue reports; 360° customer lookup). |
 
