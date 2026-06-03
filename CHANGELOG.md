@@ -7,43 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_Nothing yet._ Next up (see [ROADMAP.md](./ROADMAP.md)): request-body validation for the generic
+`execute` path, output truncation + an `--all` page cap, and `licenses` / `coupons` curated reads.
+
+## [0.1.0] - 2026-06-03
+
+First usable release — a `freemius` CLI and a `freemius-mcp` server giving full **product-scope**
+coverage of the Freemius API (all 140 operations), **read-only by default**, on a unified `Result<T>`
+engine. Verified live against a real product; 109 tests.
+
 ### Added
 
 - **Project scaffold** — standalone repo on Bun, depending on the published `@freemius/sdk` (exact
   `0.3.0`). CLI (`freemius`) + MCP (`freemius-mcp`) bins, codegen scripts, and an SDK-isolation smoke
   test that fails loudly if `api.__unstable_ApiClient` ever disappears upstream.
 - **Auth (spec §8)** — `resolveCredentials` with `flags > env > profile` precedence,
-  `MissingCredentialError` for absent `productId`/`apiKey`, optional `secretKey`/`publicKey`, and
-  `loadProfile` for `~/.config/freemius/config.json`.
+  `MissingCredentialError` for absent `productId`/`apiKey`, optional `secretKey`/`publicKey`. The
+  `~/.config/freemius/config.json` **profile** works env-free on **both** surfaces (CLI `--profile`,
+  MCP `FREEMIUS_PROFILE`), so no secrets need live in env or the MCP host config.
 - **Client** — `createFreemius` builds the SDK client with a `canSign` flag; signed-URL ops are gated
-  on a real secret + public key.
+  on a real secret + public key (placeholder injected otherwise, so api-key-only reads work).
 - **Curated reads** — `subscriptions`, `users`, `payments`, `plans` (`get` + `list`) across both the
-  CLI and MCP, with `readOnlyHint` annotations.
+  CLI and MCP, with `readOnlyHint` annotations, data-driven from a `READ_ENTITIES` registry.
 - **Raw client** — `rawRequest`, the sole `api.__unstable_ApiClient` consumer (isolated to one
-  `unstableClient()` cast), now the path for **all** reads and for entities with no SDK service.
+  `unstableClient()` cast), the path for **all** reads and for entities with no SDK service.
+- **Unified `Result<T>`** — every handler returns `{ ok, data } | { ok: false, error }`.
 - **Writes behind a fail-closed gate (spec §7)** — `cancel_subscription` and `create_coupon` (CLI +
   MCP). Refused unless write mode is on (`--write` / `FREEMIUS_MCP_ALLOW_WRITE=1`); destructive ops
   additionally require a `confirm` arg echoing the target id.
-- **Unified `Result<T>`** — every handler returns `{ ok, data } | { ok: false, error }`. Reads are
-  data-driven from a `READ_ENTITIES` registry (one CLI loop + one MCP loop); adding a read entity is a
-  one-line registry entry.
 - **Codegen spine (spec §9)** — `bun run generate` parses `openapi.yaml` (Bun's native YAML, no dep)
-  and emits two committed artifacts: `core/catalog.ts` (the 140-operation catalog —
-  id/method/templatePath/scope/`safe`/`destructive`/params) and `core/schema.d.ts`
-  (`openapi-typescript`). Catalog metadata is derived (`safe` = GET, `destructive` = DELETE + overlay)
-  so nothing hand-classified can drift; the pure builder is unit-tested against a fixture.
-- **Generic long-tail — full 140-operation coverage (spec §5/§7).** One `execute()` runner enforces the
-  whole safety model in a single place (unknown-op → scope check → **fail-closed** write gate →
-  destructive `confirm` → required-param presence) and returns `Result<unknown>`. Both surfaces funnel
-  through it: the CLI `freemius call <op> --param k=v --json '{…}' [--confirm]` (honors `--dry-run`) and
-  the MCP dynamic trio `freemius_search_tools` / `freemius_describe_tool` / `freemius_execute_tool`.
-  Known limitation: request-body fields are not yet schema-validated (path/query presence only).
+  and emits `core/catalog.ts` (the 140-operation catalog) + `core/schema.d.ts` (`openapi-typescript`).
+  Catalog metadata is derived (`safe` = GET, `destructive` = DELETE + overlay) so nothing drifts; the
+  pure builder is unit-tested against a fixture.
+- **Generic long-tail — full 140-operation coverage (spec §5/§7).** One `execute()` runner enforces
+  the whole safety model in one place (unknown-op → scope check → **fail-closed** write gate →
+  destructive `confirm` → required-param presence) and returns `Result<unknown>`. Surfaced as the CLI
+  `freemius call <op> --param k=v --json '{…}' [--confirm]` (honors `--dry-run`) and the MCP dynamic
+  trio `freemius_search_tools` / `freemius_describe_tool` / `freemius_execute_tool`.
+- **`revenue_summary` (spec §7)** — bounded, client-side **per-currency** revenue aggregation
+  (gross/refunds/net) over a date window (default 90 days). Its own pager (never `iterateAll`): a
+  failed page is refused loudly or returned as a labelled partial — never read as end-of-data — and a
+  `maxPages` cap surfaces `capped:true`, never silent. CLI `freemius revenue-summary` + read-only MCP
+  tool `revenue_summary`.
+- **Versioning** — `0.1.0` from a single source (`package.json` → `core/version.ts`), surfaced by the
+  CLI `--version` and the MCP `initialize` handshake (`new McpServer({ name, version })`).
 
 ### Changed
 
 - **Tooling: Biome replaces ESLint + Prettier.** One fast (Rust) tool + one `biome.json` instead of
-  five deps and two configs (`eslint` / `typescript-eslint` / `@eslint/js` / `eslint-config-prettier`
-  / `prettier`). `bun run lint` → `biome check`; `bun run format` → `biome format`.
+  five deps and two configs. `bun run lint` → `biome check`; `bun run format` → `biome format`.
 
 ### Fixed
 
@@ -54,8 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every read through the raw client surfaces a real `{ ok: false, error }` instead of an empty list.
 - **`--dry-run` is now respected** — it was accepted but ignored, so a "dry" cancel actually mutated.
   Mutations now print the planned request and exit without calling the API.
-- **`--profile` now loads** `~/.config/freemius/config.json` (was a silent no-op) — also the
-  "auth without env vars" path.
+- **`--profile` now loads** `~/.config/freemius/config.json` on the CLI **and** the MCP server (the
+  server previously read env only) — the "auth without env vars" path.
 - **CLI error boundary** — `parseAsync` + top-level catch + `unhandledRejection`; network/timeout
   errors print a clean, **secret-redacted** envelope instead of a raw stack trace.
 - **Request timeouts** — `AbortSignal.timeout` on the raw path, `withTimeout` around SDK calls; a hung
@@ -64,6 +76,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - Read-only by default. Developer-scope operations (plan/pricing writes, etc.) are out of scope in
-  v1 — they require a login/2FA flow the SDK does not implement.
-- `secretKey` is optional for us but required by the SDK constructor (≥ 32 chars); a placeholder is
-  injected when absent so api-key-only reads work.
+  v1 — they require a login/2FA flow the SDK does not implement; `execute` refuses them
+  (`scope_unsupported`).
+- **Deferred:** MRR (needs per-subscription cycle + currency); request-body field validation for the
+  generic `execute` (path/query presence is checked; bodies surface the API's own 4xx).
+- **Repo tooling (not shipped in the npm package):** the `freemius-mcp-engineer` skill +
+  `freemius-surgeon` agent (for building this repo), and the `freemius-revenue-report` /
+  `freemius-customer-lookup` skills (for *using* the connected MCP).
+
+[Unreleased]: https://github.com/itaides/freemius-mcp/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/itaides/freemius-mcp/releases/tag/v0.1.0
