@@ -77,6 +77,21 @@ The `freemius-mcp-engineer` skill has the full recipes; in short:
   client (no `fields`), guarded by a test.
 - SDK services swallow errors — test against mocks **and** verify live before claiming a read works.
 
+## Branching & PRs
+
+`main` is **protected**: no direct pushes, force-pushes, or deletions. Every change lands through a
+Pull Request that must pass the `typecheck · lint · test` CI check (your branch must be up to date
+with `main`). Approvals aren't required, so you can merge your own PR once CI is green.
+
+```bash
+git checkout -b my-change
+# …edit…
+bun run typecheck && bun run lint && bun run test   # run the gate locally first
+git push -u origin my-change
+gh pr create --fill                                 # CI runs on the PR
+gh pr merge --squash --delete-branch                # merge once the check is green
+```
+
 ## Commit & PR guidelines
 
 - Branch off `main`. Keep changes minimal and focused; don't refactor unrelated code.
