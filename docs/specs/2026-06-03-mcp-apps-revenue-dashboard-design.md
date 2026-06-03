@@ -114,22 +114,30 @@ Render: one **card per currency** (gross / refunds / net / count) plus a depende
 bar chart (gross vs refunds vs net per currency). Surfaces `capped` ("≥N payments — window capped")
 and `partial` flags so the chart never lies about completeness. Empty state when `byCurrency` is `{}`.
 
-## 4. Dependencies **[cond 3]**
+## 4. Dependencies **[cond 3 — verified empirically]**
 
-Add `@modelcontextprotocol/ext-apps`, **exact-pinned** `1.7.3` (no caret), used both sides
-(`/server` helpers + the client `App`). Its peers, verified via `npm view`:
+Add `@modelcontextprotocol/ext-apps`, **exact-pinned** `1.7.3` (no caret), as a **runtime
+`dependency`** (it is imported by `register.ts` in the shipped MCP bin), used both sides (`./server`
+helpers + the client `App` from the root `.`). Peers, verified via `npm view`:
 
 | Peer | Status |
 | :--- | :--- |
 | `@modelcontextprotocol/sdk ^1.29.0` | already a dependency ✓ |
 | `zod ^3.25 \|\| ^4` | already a dependency (`^4.4.3`) ✓ |
-| `react` / `react-dom` (^17/18/19) | **new** — declared non-optional by ext-apps |
+| `react` / `react-dom` (^17/18/19) | declared non-optional, **but not needed by our entries** ✓ |
 
-We write **vanilla DOM** (no React) in `main.ts`. But because ext-apps declares `react`/`react-dom`
-as non-optional peers, strict installers (`npm ci`, `pnpm`) warn or fail. Decision: add `react` +
-`react-dom` as **devDependencies** to satisfy the peer set cleanly. (If the implementation confirms
-the `@modelcontextprotocol/ext-apps` root entry imports nothing from React, we revisit; the default
-is to add them.) So this feature adds **up to 3 packages**, not "one."
+**Empirically verified (2026-06-03), not assumed:** the package's `exports` segregates React into the
+`./react`, `./react-with-deps`, and `./app-with-deps` subpaths. We import only the root `.` (`App`) and
+`./server`. With **React not installed**, both `import { App } from '@modelcontextprotocol/ext-apps'`
+and `import { registerAppResource, RESOURCE_MIME_TYPE, registerAppTool } from
+'@modelcontextprotocol/ext-apps/server'` load successfully in Node (`grep` shows no `react` import in
+`dist/src/app.js` or `dist/src/server/index.js`; both modules load standalone). We write **vanilla
+DOM** in `main.ts`.
+
+**Decision (reversed from the draft):** do **not** add `react`/`react-dom`. This feature adds exactly
+**one** package. The non-optional peer declaration may emit a benign install *warning* under strict
+npm/pnpm; `bun install` does not. We accept the warning rather than carry two unused dependencies.
+(`@standard-schema/spec`, ext-apps' sole runtime dep, is pulled transitively.)
 
 ## 5. Safety / security
 
@@ -175,7 +183,7 @@ We already have the zod-able `RevenueSummary` shape in `core/revenue.ts`; declar
 
 ## 9. Open questions (resolve during planning, none blocking)
 
-- Does the `@modelcontextprotocol/ext-apps` **root** entry pull React, or only `/react`? (Confirms
-  whether `react`/`react-dom` devDeps are strictly required — §4.)
+- ~~Does the `@modelcontextprotocol/ext-apps` **root** entry pull React?~~ **Resolved 2026-06-03:** no
+  — root `.` and `./server` are React-free; no `react`/`react-dom` needed (§4).
 - Bun's single-file inline-HTML output shape (one `Bun.build` call vs build + manual inline). Pick the
   simplest that yields one self-contained string.
