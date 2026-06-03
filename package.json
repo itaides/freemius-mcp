@@ -19,7 +19,7 @@
         "dev:cli": "bun run src/cli/index.ts",
         "dev:mcp": "bun run src/mcp/index.ts",
         "build": "bun run scripts/build.ts",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc --noEmit && tsc --noEmit -p src/mcp/ui/revenue/app/tsconfig.json",
         "test": "vitest run",
         "test:watch": "vitest",
         "lint": "biome check .",
@@ -28,7 +28,7 @@
         "generate": "bun run scripts/generate.ts",
         "generate:ui": "bun run scripts/build-ui.ts",
         "fetch-spec": "bun run scripts/fetch-spec.ts",
-        "prepublishOnly": "bun run build"
+        "prepublishOnly": "bun run generate:ui && bun run build"
     },
     "dependencies": {
         "@freemius/sdk": "0.3.0",

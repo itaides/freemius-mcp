@@ -2,7 +2,7 @@
 // Fails LOUDLY if a bump renames/removes the server helpers or the App client we depend on.
 
 import { App } from '@modelcontextprotocol/ext-apps';
-import { registerAppResource, registerAppTool, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/server';
+import { RESOURCE_MIME_TYPE, registerAppResource, registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import { describe, expect, it } from 'vitest';
 
 describe('@modelcontextprotocol/ext-apps (isolation seam)', () => {

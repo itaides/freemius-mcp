@@ -62,7 +62,6 @@ describe('registerCuratedTools', () => {
     });
 });
 
-
 describe('cancel_subscription (write gate)', () => {
     it('is present and annotated destructive', async () => {
         const client = await connectClient(false);

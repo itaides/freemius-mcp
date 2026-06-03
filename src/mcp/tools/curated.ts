@@ -66,8 +66,6 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
         );
     }
 
-
-
     server.registerTool(
         'cancel_subscription',
         {

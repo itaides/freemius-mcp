@@ -38,7 +38,11 @@ if (!result.success) {
     process.exit(1);
 }
 
-const js = await result.outputs[0]!.text();
+const output = result.outputs[0];
+if (!output) {
+    throw new Error('No build output found');
+}
+const js = await output.text();
 
 const html =
     '<!doctype html><html lang="en"><head><meta charset="utf-8">' +

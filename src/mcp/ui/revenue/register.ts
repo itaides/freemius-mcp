@@ -3,7 +3,7 @@
 // _meta.ui and render the text content. Reuses core/revenue.ts unchanged.
 
 import type { Freemius } from '@freemius/sdk';
-import { registerAppResource, registerAppTool, RESOURCE_MIME_TYPE } from '@modelcontextprotocol/ext-apps/server';
+import { RESOURCE_MIME_TYPE, registerAppResource, registerAppTool } from '@modelcontextprotocol/ext-apps/server';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { revenueSummary } from '../../../core/revenue.js';
@@ -51,7 +51,8 @@ export function registerRevenueApp(server: McpServer, client: Freemius): void {
             annotations: { title: 'Revenue summary', readOnlyHint: true, openWorldHint: true },
             _meta: { ui: { resourceUri: RESOURCE_URI } },
         },
-        async ({ days, from, to }) => {
+        // biome-ignore lint/suspicious/noExplicitAny: SDK version mismatch necessitates any
+        async ({ days, from, to }): Promise<any> => {
             const result = await revenueSummary(client, { days, from, to });
             if (!result.ok) {
                 return apiErrorResult(result.error);
