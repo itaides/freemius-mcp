@@ -51,8 +51,9 @@ Once the core is solid, ship interactive UI via **[MCP Apps](https://apps.extens
 iframes**, communicating over **JSON-RPC via `postMessage`** (no access to the host DOM/cookies/storage).
 
 Fits two surfaces here:
-- **Revenue dashboard** — replace the `revenue_summary` text blob with an interactive chart (date
-  window, per-currency breakdown, drill-down) instead of a wall of JSON.
+- **Revenue dashboard (shipped, first example)** — `revenue_summary` returns `structuredContent` +
+  `_meta.ui` and serves a `ui://` per-currency dashboard; text fallback preserved. See
+  `docs/specs/2026-06-03-mcp-apps-revenue-dashboard-design.md`.
 - **Coupon-config form** — a guided form for `create_coupon` (plans, discount, limits, dates) that
   validates before submitting.
 

@@ -53,6 +53,9 @@ $ freemius --write subscriptions cancel 123 --confirm 123   # writes are fail-cl
 `freemius_execute_tool`) are refused unless `FREEMIUS_MCP_ALLOW_WRITE=1`; destructive ops also require
 a `confirm`. Developer-scope ops (plan/pricing writes) are out of scope and return `scope_unsupported`.
 
+> `revenue_summary` renders as an interactive dashboard in hosts that support MCP Apps; everywhere
+> else it returns the same text summary.
+
 ## Authentication
 
 Product-scope only — values from your Freemius dashboard (Developer → product → Settings → Keys).

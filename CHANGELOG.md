@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_Nothing yet._ Next up (see [ROADMAP.md](./ROADMAP.md)): request-body validation for the generic
-`execute` path, output truncation + an `--all` page cap, and `licenses` / `coupons` curated reads.
+### Added
+
+- **MCP Apps — revenue dashboard.** `revenue_summary` now ships an interactive `ui://` dashboard
+  (per-currency cards + inline-SVG bars, 30/90/365-day window) rendered in hosts that support
+  [MCP Apps](https://apps.extensions.modelcontextprotocol.io/); other hosts get the unchanged text.
+  Built on `@modelcontextprotocol/ext-apps` (exact-pinned `1.7.3`). The UI is bundled into a generated
+  module (`bun run generate:ui`); no runtime file read.
 
 ## [0.1.0] - 2026-06-03
 
