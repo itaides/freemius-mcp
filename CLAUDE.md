@@ -31,6 +31,7 @@ ergonomic control of a Freemius **product** — like Stripe/Polar ship official 
 | **Roadmap** | [`ROADMAP.md`](ROADMAP.md) | What's next: near-term (`revenue_summary`, body validation), keyless auth (remote MCP + OAuth), MCP Apps (interactive UI). |
 | **Usage** | [`README.md`](README.md) | Quick start, MCP wiring, command/tool list. |
 | **Build helpers** | [`.claude/skills/freemius-mcp-engineer/`](.claude/skills/freemius-mcp-engineer/SKILL.md) + [`.claude/agents/freemius-surgeon.md`](.claude/agents/freemius-surgeon.md) | Project skill (recipes for adding entities/writes/MCP tools) and a TDD-first implementer subagent. Invoke the skill before non-trivial changes. |
+| **Use the MCP** | [`.claude/skills/freemius-revenue-report/`](.claude/skills/freemius-revenue-report/SKILL.md), [`.claude/skills/freemius-customer-lookup/`](.claude/skills/freemius-customer-lookup/SKILL.md) | Usage skills that drive the connected `freemius` MCP server (per-currency revenue reports; 360° customer lookup). |
 
 ## 3. Quick Start
 
