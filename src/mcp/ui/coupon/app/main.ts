@@ -136,5 +136,13 @@ function setLoading(loading: boolean): void {
 
 // --- Init ---
 
-void loadPlans();
-void app.connect();
+async function init(): Promise<void> {
+    try {
+        await app.connect();
+        await loadPlans();
+    } catch {
+        plansLoading.textContent = 'Could not load plans.';
+    }
+}
+
+void init();
