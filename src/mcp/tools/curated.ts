@@ -99,7 +99,7 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
         'create_coupon',
         {
             description:
-                'Create a coupon for the product. A write — requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1). Not destructive (no confirm needed).',
+                'Create a coupon for the product. A write — requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1). Not destructive (no confirm needed). Renders an interactive configuration form in hosts that support MCP Apps.',
             inputSchema: {
                 code: z.string().describe('the coupon code'),
                 discount: z.number().describe('discount amount'),
@@ -112,6 +112,11 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 destructiveHint: false,
                 idempotentHint: false,
                 openWorldHint: true,
+            },
+            _meta: {
+                ui: {
+                    resourceUri: 'ui://freemius/coupon-form.html',
+                },
             },
         },
         async ({ code, discount, discount_type, plans }) => {
