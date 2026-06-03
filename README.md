@@ -132,7 +132,7 @@ bun run test                  # vitest (msw-mocked) · typecheck · lint via bio
 bun run build                 # → dist/{cli,mcp}/index.js
 ```
 
-Operating the tool as an agent: [`AGENTS.md`](./AGENTS.md). Contributor / architecture guide: [`CLAUDE.md`](./CLAUDE.md).
+Operating the tool as an agent: [`AGENTS.md`](./AGENTS.md). Contributing: [`CONTRIBUTING.md`](./CONTRIBUTING.md). Architecture map: [`CLAUDE.md`](./CLAUDE.md).
 
 ## How it works
 
@@ -145,7 +145,8 @@ stdio server are lean shells that share those handlers, so behavior is identical
 ## Documentation
 
 - [`AGENTS.md`](./AGENTS.md) — operating the product as an agent (tools, safety, results)
-- [`CLAUDE.md`](./CLAUDE.md) — contributor guide & architecture map
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — how to build/contribute (setup, workflow, conventions)
+- [`CLAUDE.md`](./CLAUDE.md) — architecture map & agent context
 - [`docs/specs/`](./docs/specs) — the design spec (source of truth)
 - [`CHANGELOG.md`](./CHANGELOG.md) · [`ROADMAP.md`](./ROADMAP.md) — shipped / next (keyless auth, MCP Apps)
 
