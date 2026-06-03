@@ -5,6 +5,7 @@ import { Command } from 'commander';
 import { loadProfile } from '../core/auth.js';
 import { errorEnvelope } from '../core/format.js';
 import { createFreemius } from '../core/freemius.js';
+import { VERSION } from '../core/version.js';
 import { registerCall } from './commands/call.js';
 import { registerCoupons } from './commands/coupons.js';
 import { registerReads } from './commands/reads.js';
@@ -15,7 +16,7 @@ const program = new Command();
 program
     .name('freemius')
     .description('Community CLI for the Freemius product API (unofficial)')
-    .version('0.0.0')
+    .version(VERSION)
     .option('--product <id>', 'Freemius product id')
     .option('--profile <name>', 'config profile from ~/.config/freemius/config.json', 'default')
     .option('--write', 'enable mutating commands')

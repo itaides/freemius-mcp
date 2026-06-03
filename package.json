@@ -1,6 +1,6 @@
 {
     "name": "@eventimio/freemius-mcp",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Community CLI + MCP server for the Freemius product API. Not affiliated with Freemius.",
     "type": "module",
     "license": "MIT",
