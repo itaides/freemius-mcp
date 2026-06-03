@@ -13,7 +13,6 @@ import { cancelSubscription } from '../../cli/commands/subscriptions.js';
 import { getEntity, listEntity, READ_ENTITIES } from '../../core/entities.js';
 import { assertConfirmed, assertWriteEnabled } from '../../core/guards.js';
 import type { ApiError, Result } from '../../core/result.js';
-import { revenueSummary } from '../../core/revenue.js';
 
 const listShape = {
     count: z.number().int().positive().max(50).optional().describe('page size (max 50)'),
@@ -67,28 +66,7 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
         );
     }
 
-    // revenue_summary — a read: bounded, client-side aggregation of payments grouped by currency
-    // (docs/specs §7). Reuses the shared handler; the bounded window means it never runs unbounded.
-    server.registerTool(
-        'revenue_summary',
-        {
-            description:
-                'Bounded, client-side revenue aggregation (gross/refunds/net) grouped by currency over a date window (default last 90 days). Not an analytics endpoint — for full reporting use the Freemius dashboard.',
-            inputSchema: {
-                days: z
-                    .number()
-                    .int()
-                    .positive()
-                    .max(365)
-                    .optional()
-                    .describe('window length in days when from/to are omitted (default 90, max 365)'),
-                from: z.string().optional().describe("window start, 'YYYY-MM-DD HH:mm:ss' UTC"),
-                to: z.string().optional().describe("window end, 'YYYY-MM-DD HH:mm:ss' UTC"),
-            },
-            annotations: readOnly('Revenue summary'),
-        },
-        async ({ days, from, to }) => resultToCall(await revenueSummary(client, { days, from, to }))
-    );
+
 
     server.registerTool(
         'cancel_subscription',
