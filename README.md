@@ -1,4 +1,4 @@
-<h1 align="center">@eventimio/freemius-mcp</h1>
+<h1 align="center">@itaides/freemius-mcp</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License">
