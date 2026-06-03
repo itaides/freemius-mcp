@@ -26,6 +26,7 @@
         "lint:fix": "biome check --write .",
         "format": "biome format --write .",
         "generate": "bun run scripts/generate.ts",
+        "generate:ui": "bun run scripts/build-ui.ts",
         "fetch-spec": "bun run scripts/fetch-spec.ts",
         "prepublishOnly": "bun run build"
     },
