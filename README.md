@@ -69,7 +69,7 @@ In hosts that support **[MCP Apps](https://github.com/modelcontextprotocol/ext-a
    - Top metrics grid displaying lifetime value (LTV), active licenses count, and subscription count.
    - Tabbed view displaying:
      - **Subscriptions**: List of plans, pricing, status, and renewal dates.
-     - **Payments**: Full transaction history with inline invoice actions.
+     - **Payments**: Full transaction history listing (date, amount, currency, and status).
      - **Licenses**: Activation count slot usage and partially redacted license keys.
 
 *Note: Progressive enhancement is fully preserved — where MCP Apps are not supported by the host client (e.g. Claude Code CLI), tools gracefully fall back to returning their native structured JSON/text representation.*

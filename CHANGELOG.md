@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **MCP Apps — customer profile card.** `get_user` now ships with an interactive `ui://` customer detail view. Features top metrics (Active Subscriptions, Active Licenses count, multi-currency LTV) and tabbed views for Subscriptions, Payments, and Licenses (with redacted license keys and active activation slots).
 - **Curated read support for licenses and coupons.** Added `list_licenses`, `get_license`, `list_coupons`, and `get_coupon` curated named tools and CLI command groups.
 - **MCP Apps — revenue dashboard.** `revenue_summary` now ships an interactive `ui://` dashboard
-  (per-currency cards + inline-SVG bars, 30/90/365-day window) rendered in hosts that support
+  (per-currency cards + HTML/CSS progress bars, 30/90/365-day window) rendered in hosts that support
   [MCP Apps](https://apps.extensions.modelcontextprotocol.io/); other hosts get the unchanged text.
   Built on `@modelcontextprotocol/ext-apps` (exact-pinned `1.7.3`). The UI is bundled into a generated
   module (`bun run generate:ui`); no runtime file read.

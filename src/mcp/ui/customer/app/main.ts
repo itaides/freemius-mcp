@@ -262,6 +262,15 @@ async function fetchSubscriptions(userId: number | string): Promise<void> {
     }
 }
 
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function renderSubscriptionsList(subs: Subscription[]): void {
     const activeCount = subs.filter((s) => s.status === 'active' || s.status === 'trialing').length;
     const subMetricEl = document.getElementById('metric-subscriptions');
@@ -279,12 +288,12 @@ function renderSubscriptionsList(subs: Subscription[]): void {
         return `
             <div class="list-item">
                 <div class="item-left">
-                    <span class="item-title">${planName}</span>
-                    <span class="item-subtitle">Billing: ${cycle} · Next due: ${dateStr}</span>
+                    <span class="item-title">${escapeHtml(planName)}</span>
+                    <span class="item-subtitle">Billing: ${escapeHtml(cycle)} · Next due: ${escapeHtml(dateStr)}</span>
                 </div>
                 <div class="item-right">
-                    ${amount ? `<span style="font-weight: 600;">${amount}</span>` : ''}
-                    <span class="badge ${status}">${status}</span>
+                    ${amount ? `<span style="font-weight: 600;">${escapeHtml(amount)}</span>` : ''}
+                    <span class="badge ${escapeHtml(status)}">${escapeHtml(status)}</span>
                 </div>
             </div>
         `;
@@ -341,12 +350,12 @@ function renderPaymentsList(payments: Payment[]): void {
         return `
             <div class="list-item">
                 <div class="item-left">
-                    <span class="item-title">Payment #${payment.id}</span>
-                    <span class="item-subtitle">Date: ${dateStr}</span>
+                    <span class="item-title">Payment #${escapeHtml(String(payment.id))}</span>
+                    <span class="item-subtitle">Date: ${escapeHtml(dateStr)}</span>
                 </div>
                 <div class="item-right">
-                    <span style="font-weight: 600;">${amount}</span>
-                    <span class="badge ${status}">${status}</span>
+                    <span style="font-weight: 600;">${escapeHtml(amount)}</span>
+                    <span class="badge ${escapeHtml(status)}">${escapeHtml(status)}</span>
                 </div>
             </div>
         `;
@@ -384,22 +393,31 @@ function renderLicensesList(licenses: License[]): void {
 
     renderList('panel-licenses', licenses, 'No licenses found', (license: License) => {
         const planName = planMap.get(String(license.plan_id)) || `Plan #${license.plan_id}`;
-        const key = license.secret_key
-            ? `xxxx-xxxx-xxxx-${license.secret_key.substring(license.secret_key.length - 4)}`
-            : 'No key';
-        const quotaLimit = license.quota === 0 || license.quota === null ? 'Unlimited' : String(license.quota);
+
+        let key = 'No key';
+        if (license.secret_key) {
+            const len = license.secret_key.length;
+            if (len <= 4) {
+                key = 'xxxx';
+            } else {
+                key = `xxxx-xxxx-xxxx-${license.secret_key.substring(len - 4)}`;
+            }
+        }
+
+        const quota = license.quota;
+        const quotaLimit = quota === undefined || quota === null || quota === 0 ? 'Unlimited' : String(quota);
         const usageStr = `${license.activated ?? 0} / ${quotaLimit}`;
         const status = license.is_cancelled ? 'cancelled' : license.is_active ? 'active' : 'inactive';
 
         return `
             <div class="list-item">
                 <div class="item-left">
-                    <span class="item-title">${planName}</span>
-                    <span class="item-subtitle">${key}</span>
+                    <span class="item-title">${escapeHtml(planName)}</span>
+                    <span class="item-subtitle">${escapeHtml(key)}</span>
                 </div>
                 <div class="item-right">
-                    <span style="font-weight: 600; font-size: 13px;">${usageStr} installs</span>
-                    <span class="badge ${status}">${status}</span>
+                    <span style="font-weight: 600; font-size: 13px;">${escapeHtml(usageStr)} installs</span>
+                    <span class="badge ${escapeHtml(status)}">${escapeHtml(status)}</span>
                 </div>
             </div>
         `;
