@@ -40,6 +40,10 @@ describe('registerCuratedTools', () => {
             'list_payments',
             'list_plans',
             'get_plan',
+            'list_licenses',
+            'get_license',
+            'list_coupons',
+            'get_coupon',
         ]) {
             expect(names).toContain(expected);
         }

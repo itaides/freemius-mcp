@@ -27,6 +27,8 @@ export const READ_ENTITIES = [
     { name: 'users', listKey: 'users', singular: 'user' },
     { name: 'payments', listKey: 'payments', singular: 'payment' },
     { name: 'plans', listKey: 'plans', singular: 'plan' },
+    { name: 'licenses', listKey: 'licenses', singular: 'license' },
+    { name: 'coupons', listKey: 'coupons', singular: 'coupon' },
 ] as const satisfies readonly EntityDef[];
 
 const MAX_COUNT = 50;
