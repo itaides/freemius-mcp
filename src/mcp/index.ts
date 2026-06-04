@@ -9,6 +9,9 @@ import { createFreemius } from '../core/freemius.js';
 import { VERSION } from '../core/version.js';
 import { registerCuratedTools } from './tools/curated.js';
 import { registerDynamicTools } from './tools/dynamic.js';
+import { registerCouponApp } from './ui/coupon/register.js';
+import { registerCustomerApp } from './ui/customer/register.js';
+import { registerRevenueApp } from './ui/revenue/register.js';
 
 async function main(): Promise<void> {
     // Resolve creds with the same precedence as the CLI: env > ~/.config/freemius/config.json profile.
@@ -18,6 +21,9 @@ async function main(): Promise<void> {
 
     const server = new McpServer({ name: 'freemius-mcp', version: VERSION });
     registerCuratedTools(server, client, { writeEnabled });
+    registerRevenueApp(server, client);
+    registerCouponApp(server);
+    registerCustomerApp(server);
     registerDynamicTools(server, client, { writeEnabled });
 
     await server.connect(new StdioServerTransport());

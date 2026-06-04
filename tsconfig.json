@@ -18,5 +18,12 @@
         "noEmit": true
     },
     "include": ["src", "test"],
-    "exclude": ["dist", "node_modules", "scripts"]
+    "exclude": [
+        "dist",
+        "node_modules",
+        "scripts",
+        "src/mcp/ui/revenue/app",
+        "src/mcp/ui/coupon/app",
+        "src/mcp/ui/customer/app"
+    ]
 }

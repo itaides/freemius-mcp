@@ -13,7 +13,6 @@ import { cancelSubscription } from '../../cli/commands/subscriptions.js';
 import { getEntity, listEntity, READ_ENTITIES } from '../../core/entities.js';
 import { assertConfirmed, assertWriteEnabled } from '../../core/guards.js';
 import type { ApiError, Result } from '../../core/result.js';
-import { revenueSummary } from '../../core/revenue.js';
 
 const listShape = {
     count: z.number().int().positive().max(50).optional().describe('page size (max 50)'),
@@ -29,7 +28,16 @@ export function apiErrorResult(error: ApiError): CallToolResult {
 }
 
 export function resultToCall<T>(result: Result<T>): CallToolResult {
-    return result.ok ? jsonResult(result.data) : apiErrorResult(result.error);
+    if (result.ok) {
+        const structuredContent = Array.isArray(result.data)
+            ? { items: result.data }
+            : (result.data as Record<string, unknown>);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+            structuredContent,
+        } as unknown as CallToolResult;
+    }
+    return apiErrorResult(result.error);
 }
 
 function errorResult(error: Error): CallToolResult {
@@ -56,39 +64,19 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
             },
             async ({ count, offset }) => resultToCall(await listEntity(client, def, { count, offset }))
         );
+        const meta =
+            def.singular === 'user' ? { ui: { resourceUri: 'ui://freemius/customer-profile.html' } } : undefined;
         server.registerTool(
             `get_${def.singular}`,
             {
                 description: `Get a ${def.singular} by id.`,
                 inputSchema: { id: z.string().describe(`${def.singular} id`) },
                 annotations: readOnly(`Get ${def.singular}`),
+                ...(meta ? { _meta: meta } : {}),
             },
             async ({ id }) => resultToCall(await getEntity(client, def, id))
         );
     }
-
-    // revenue_summary — a read: bounded, client-side aggregation of payments grouped by currency
-    // (docs/specs §7). Reuses the shared handler; the bounded window means it never runs unbounded.
-    server.registerTool(
-        'revenue_summary',
-        {
-            description:
-                'Bounded, client-side revenue aggregation (gross/refunds/net) grouped by currency over a date window (default last 90 days). Not an analytics endpoint — for full reporting use the Freemius dashboard.',
-            inputSchema: {
-                days: z
-                    .number()
-                    .int()
-                    .positive()
-                    .max(365)
-                    .optional()
-                    .describe('window length in days when from/to are omitted (default 90, max 365)'),
-                from: z.string().optional().describe("window start, 'YYYY-MM-DD HH:mm:ss' UTC"),
-                to: z.string().optional().describe("window end, 'YYYY-MM-DD HH:mm:ss' UTC"),
-            },
-            annotations: readOnly('Revenue summary'),
-        },
-        async ({ days, from, to }) => resultToCall(await revenueSummary(client, { days, from, to }))
-    );
 
     server.registerTool(
         'cancel_subscription',
@@ -123,7 +111,7 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
         'create_coupon',
         {
             description:
-                'Create a coupon for the product. A write — requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1). Not destructive (no confirm needed).',
+                'Create a coupon for the product. A write — requires write mode (FREEMIUS_MCP_ALLOW_WRITE=1). Not destructive (no confirm needed). Renders an interactive configuration form in hosts that support MCP Apps.',
             inputSchema: {
                 code: z.string().describe('the coupon code'),
                 discount: z.number().describe('discount amount'),
@@ -136,6 +124,11 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
                 destructiveHint: false,
                 idempotentHint: false,
                 openWorldHint: true,
+            },
+            _meta: {
+                ui: {
+                    resourceUri: 'ui://freemius/coupon-form.html',
+                },
             },
         },
         async ({ code, discount, discount_type, plans }) => {

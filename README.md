@@ -53,6 +53,27 @@ $ freemius --write subscriptions cancel 123 --confirm 123   # writes are fail-cl
 `freemius_execute_tool`) are refused unless `FREEMIUS_MCP_ALLOW_WRITE=1`; destructive ops also require
 a `confirm`. Developer-scope ops (plan/pricing writes) are out of scope and return `scope_unsupported`.
 
+## Interactive UIs (MCP Apps)
+
+In hosts that support **[MCP Apps](https://github.com/modelcontextprotocol/ext-apps)** (like Claude Desktop), this server delivers rich, interactive sandboxed HTML/JS dashboards and forms instead of plain text responses. We currently have **three** interactive MCP Apps:
+
+1. 📊 **Revenue Dashboard** (linked to `revenue_summary`): 
+   - A per-currency aggregate breakdown showing Gross, Refunds, and Net revenue over a selected window.
+   - Interactive buttons to toggle between `30d`, `90d`, and `365d` ranges.
+2. 🎫 **Coupon Creation Form** (linked to `create_coupon`):
+   - A guided, client-side validated form for creating coupons.
+   - Dynamically loads your product's pricing plans to support plan-specific restrictions.
+   - Gracefully handles write permission checks before submitting.
+3. 👤 **Customer Profile Card** (linked to `get_user`):
+   - A glassmorphic detail card showing key customer information.
+   - Top metrics grid displaying lifetime value (LTV), active licenses count, and subscription count.
+   - Tabbed view displaying:
+     - **Subscriptions**: List of plans, pricing, status, and renewal dates.
+     - **Payments**: Full transaction history listing (date, amount, currency, and status).
+     - **Licenses**: Activation count slot usage and partially redacted license keys.
+
+*Note: Progressive enhancement is fully preserved — where MCP Apps are not supported by the host client (e.g. Claude Code CLI), tools gracefully fall back to returning their native structured JSON/text representation.*
+
 ## Authentication
 
 Product-scope only — values from your Freemius dashboard (Developer → product → Settings → Keys).

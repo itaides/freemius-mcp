@@ -67,6 +67,9 @@ Useful flags: `--profile <name>` (read creds from `~/.config/freemius/config.jso
   `partial` is set, say the figure is incomplete, don't present it as final. There is **no MRR** and
   no "all-time" — it's a bounded window.
 
+> `revenue_summary` renders as an interactive dashboard in hosts that support MCP Apps; everywhere
+> else it returns the same text summary.
+
 ## Care
 
 - Records contain **PII** (emails, IPs, card ids). Surface only what the user asked for; don't dump

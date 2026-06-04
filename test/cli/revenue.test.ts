@@ -29,7 +29,7 @@ function buildProgram() {
 async function run(argv: string[]): Promise<{ out: string; exitCode: number | undefined }> {
     const logs: string[] = [];
     const spy = vi.spyOn(console, 'log').mockImplementation((m) => logs.push(String(m)));
-    process.exitCode = undefined;
+    process.exitCode = 0;
     try {
         await buildProgram().parseAsync(['node', 'freemius', ...argv]);
     } finally {
