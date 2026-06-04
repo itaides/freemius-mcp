@@ -31,7 +31,7 @@ export async function createCoupon(client: Freemius, input: CreateCouponInput): 
         discount: input.discount,
         discount_type: input.discount_type,
     };
-    if (input.plans !== undefined) body.plans = input.plans;
+    if (input.plans !== undefined) body.plans = input.plans.join(',');
     if (input.user_type !== undefined) body.user_type = input.user_type;
     if (input.redemptions_limit !== undefined) body.redemptions_limit = input.redemptions_limit;
     if (input.has_renewals_discount !== undefined) body.has_renewals_discount = input.has_renewals_discount;
@@ -43,14 +43,26 @@ export async function createCoupon(client: Freemius, input: CreateCouponInput): 
     });
 
     if (!isOkStatus(result.status) || result.data?.id == null) {
-        return err('create_failed', 'coupon could not be created', result.status);
+        let message = 'coupon could not be created';
+        if (result.error && typeof result.error === 'object') {
+            const errObj = result.error as Record<string, unknown>;
+            const innerError = errObj.error as Record<string, unknown> | undefined;
+            if (innerError && typeof innerError.message === 'string') {
+                message = innerError.message;
+            } else if (typeof errObj.message === 'string') {
+                message = errObj.message;
+            }
+        }
+        return err('create_failed', message, result.status);
     }
 
     return ok(result.data);
 }
 
 export function registerCoupons(program: Command, resolve: () => FreemiusContext): void {
-    const coupons = program.command('coupons').description('Coupon reads and mutations');
+    const coupons =
+        program.commands.find((c) => c.name() === 'coupons') ??
+        program.command('coupons').description('Coupon reads and mutations');
 
     coupons
         .command('create')

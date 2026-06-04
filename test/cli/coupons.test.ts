@@ -35,7 +35,7 @@ describe('createCoupon', () => {
             ok: true,
             data: { id: 42, code: 'SAVE20', discount: 20, discount_type: 'percentage' },
         });
-        expect(received).toEqual({ code: 'SAVE20', discount: 20, discount_type: 'percentage', plans: ['9'] });
+        expect(received).toEqual({ code: 'SAVE20', discount: 20, discount_type: 'percentage', plans: '9' });
     });
 
     it('omits optional fields that are not provided', async () => {

@@ -72,44 +72,105 @@ const REVENUE_BODY =
 // --- Coupon Form Config ---
 const COUPON_CSS = [
     ':root{color-scheme:light dark;font-family:system-ui,-apple-system,sans-serif;',
-    '--bg:#121214;--card-bg:#1c1c1f;--border:rgba(255,255,255,0.1);',
+    '--bg:#121214;--card-bg:#1c1c1f;--border:rgba(255,255,255,0.08);',
     '--text:#f3f4f6;--text-muted:#9ca3af;--primary:#3b82f6;--primary-hover:#2563eb;',
-    '--success:#10b981;--error:#ef4444}',
+    '--success:#10b981;--error:#ef4444;--highlight:rgba(59,130,246,0.1);--hover-bg:rgba(255,255,255,0.03)}',
     '@media (prefers-color-scheme:light){:root{',
-    '--bg:#f9fafb;--card-bg:#ffffff;--border:rgba(0,0,0,0.1);',
-    '--text:#111827;--text-muted:#6b7280;--primary:#2563eb;--primary-hover:#1d4ed8}}',
+    '--bg:#f9fafb;--card-bg:#ffffff;--border:rgba(0,0,0,0.08);',
+    '--text:#111827;--text-muted:#6b7280;--primary:#2563eb;--primary-hover:#1d4ed8;',
+    '--highlight:rgba(37,99,235,0.06);--hover-bg:rgba(0,0,0,0.02)}}',
     'body{margin:0;padding:16px;background-color:var(--bg);color:var(--text);',
     'display:flex;justify-content:center;align-items:flex-start}',
+    '.app-container{display:flex;flex-direction:column;gap:20px;width:100%;max-width:480px;box-sizing:border-box}',
     '.coupon-form-card{background:var(--card-bg);border:1px solid var(--border);',
-    'border-radius:12px;padding:24px;width:100%;max-width:480px;',
-    'box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);box-sizing:border-box}',
-    'h2{margin:0 0 20px;font-size:20px;font-weight:600}',
+    'border-radius:12px;padding:24px;width:100%;box-shadow:0 4px 12px rgba(0,0,0,0.15);box-sizing:border-box;',
+    'transition:transform 0.2s ease,box-shadow 0.2s ease}',
+    'h2{margin:0 0 20px;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}',
     '.form-group{margin-bottom:16px}',
     '.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}',
-    'label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;color:var(--text-muted)}',
+    'label{display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}',
     'input[type="text"],input[type="number"],select{width:100%;padding:10px 12px;',
     'border-radius:6px;border:1px solid var(--border);background:var(--card-bg);',
     'color:var(--text);font-family:inherit;font-size:14px;box-sizing:border-box;',
     'transition:border-color 0.15s ease,box-shadow 0.15s ease}',
     'input:focus,select:focus{outline:none;border-color:var(--primary);',
     'box-shadow:0 0 0 3px rgba(59,130,246,0.15)}',
-    '.plans-status{font-size:13px;color:var(--text-muted);font-style:italic;padding:4px 0}',
-    '.plans-checkboxes{max-height:150px;overflow-y:auto;border:1px solid var(--border);',
+    '.plans-status{font-size:13px;color:var(--text-muted);font-style:italic;padding:8px 0;text-align:center}',
+    '.plans-checkboxes{max-height:120px;overflow-y:auto;border:1px solid var(--border);',
     'border-radius:6px;padding:8px 12px;display:flex;flex-direction:column;gap:8px}',
-    '.plan-option{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text);cursor:pointer}',
+    '.plan-option{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text);cursor:pointer}',
     '.plan-option input{margin:0;cursor:pointer}',
-    'button[type="submit"]{width:100%;padding:12px;border:none;border-radius:6px;',
+    'button[type="submit"],.primary-btn{width:100%;padding:12px;border:none;border-radius:6px;',
     'background-color:var(--primary);color:white;font-size:14px;font-weight:600;',
-    'cursor:pointer;transition:background-color 0.15s ease;margin-top:8px}',
-    'button[type="submit"]:hover:not(:disabled){background-color:var(--primary-hover)}',
+    'cursor:pointer;transition:background-color 0.15s ease;margin-top:8px;display:flex;justify-content:center;align-items:center;gap:6px}',
+    'button[type="submit"]:hover:not(:disabled),.primary-btn:hover{background-color:var(--primary-hover)}',
     'button[type="submit"]:disabled{opacity:0.6;cursor:not-allowed}',
-    '.result{margin-top:16px;padding:12px;border-radius:6px;font-size:14px;display:none;animation:fadeIn 0.2s ease-in-out}',
+    '.secondary-btn{width:100%;padding:10px;border:1px solid var(--border);border-radius:6px;',
+    'background:transparent;color:var(--text);font-size:14px;font-weight:600;',
+    'cursor:pointer;transition:background-color 0.15s ease;margin-top:12px;display:flex;justify-content:center;align-items:center;gap:6px}',
+    '.secondary-btn:hover{background-color:var(--hover-bg)}',
+    '.result{margin-top:16px;padding:12px;border-radius:6px;font-size:13px;display:none;animation:fadeIn 0.2s ease-in-out}',
     '.result.success{background:rgba(16, 185, 129, 0.1);border:1px solid var(--success);color:var(--success)}',
     '.result.error{background:rgba(239, 68, 68, 0.1);border:1px solid var(--error);color:var(--error)}',
+    '.success-state{text-align:center;animation:scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)}',
+    '.success-icon-wrap{width:48px;height:48px;border-radius:50%;background:rgba(16,185,129,0.1);color:var(--success);',
+    'display:flex;align-items:center;justify-content:center;margin:0 auto 16px}',
+    '.success-code-box{background:var(--highlight);border:1px dashed var(--primary);border-radius:8px;',
+    'padding:16px;margin:16px 0;display:flex;align-items:center;justify-content:space-between;gap:12px}',
+    '.success-code{font-family:monospace;font-size:20px;font-weight:700;color:var(--primary);letter-spacing:0.05em}',
+    '.copy-badge-btn{padding:6px 12px;border-radius:6px;border:none;background:var(--primary);color:white;',
+    'font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;transition:opacity 0.2s}',
+    '.copy-badge-btn:hover{opacity:0.9}',
+    '.success-details{border-top:1px solid var(--border);padding-top:14px;margin-top:14px;display:flex;flex-direction:column;gap:8px}',
+    '.detail-row{display:flex;justify-content:space-between;font-size:13px}',
+    '.detail-lbl{color:var(--text-muted)}',
+    '.detail-val{font-weight:600}',
+    '.list-card{padding:20px 24px}',
+    '.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}',
+    '.list-header h2{margin:0}',
+    '.icon-btn{background:transparent;border:none;border-radius:50%;width:32px;height:32px;',
+    'color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;',
+    'transition:background-color 0.2s,color 0.2s}',
+    '.icon-btn:hover{background-color:var(--hover-bg);color:var(--text)}',
+    '.coupons-list{display:flex;flex-direction:column;gap:10px;max-height:220px;overflow-y:auto}',
+    '.coupon-item{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;',
+    'border:1px solid var(--border);border-radius:8px;background:rgba(128,128,128,0.02);',
+    'transition:background-color 0.15s}',
+    '.coupon-item:hover{background:var(--hover-bg)}',
+    '.coupon-item-info{display:flex;flex-direction:column;gap:4px}',
+    '.coupon-item-code{font-family:monospace;font-weight:700;font-size:14px;color:var(--text)}',
+    '.coupon-item-meta{font-size:11px;color:var(--text-muted);display:flex;gap:8px;align-items:center}',
+    '.coupon-item-actions{display:flex;align-items:center;gap:8px}',
+    '.badge-discount{background:rgba(16,185,129,0.1);color:var(--success);font-size:11px;',
+    'font-weight:600;padding:2px 6px;border-radius:4px}',
+    '.badge-active{width:6px;height:6px;border-radius:50%;background-color:var(--success)}',
     '@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}',
+    '@keyframes scaleUp{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}',
 ].join('');
 
 const COUPON_BODY =
+    '<div class="app-container">' +
+    '<!-- Success State (hidden) -->' +
+    '<div id="success-card" class="coupon-form-card success-state" style="display:none;">' +
+    '<div class="success-icon-wrap">' +
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>' +
+    '</div>' +
+    '<h2>Coupon Created!</h2>' +
+    '<div class="success-code-box">' +
+    '<span id="success-code-val" class="success-code"></span>' +
+    '<button id="copy-btn" class="copy-badge-btn">' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>' +
+    'Copy' +
+    '</button>' +
+    '</div>' +
+    '<div class="success-details">' +
+    '<div class="detail-row"><span class="detail-lbl">Discount</span><span id="success-discount-val" class="detail-val"></span></div>' +
+    '<div class="detail-row"><span class="detail-lbl">Applies to</span><span id="success-plans-val" class="detail-val"></span></div>' +
+    '<div class="detail-row"><span class="detail-lbl">Coupon ID</span><span id="success-id-val" class="detail-val"></span></div>' +
+    '</div>' +
+    '<button id="reset-btn" class="secondary-btn">Create Another Coupon</button>' +
+    '</div>' +
+    '<!-- Form Card -->' +
     '<form id="coupon-form" class="coupon-form-card">' +
     '<h2>Create Coupon</h2>' +
     '<div class="form-group">' +
@@ -136,7 +197,19 @@ const COUPON_BODY =
     '</div>' +
     '<button type="submit" id="submit-btn">Create Coupon</button>' +
     '<div id="result" class="result"></div>' +
-    '</form>';
+    '</form>' +
+    '<!-- Recent Coupons Card -->' +
+    '<div class="coupon-form-card list-card">' +
+    '<div class="list-header">' +
+    '<h2>Recent Coupons</h2>' +
+    '<button id="refresh-list-btn" class="icon-btn" title="Refresh list">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path></svg>' +
+    '</button>' +
+    '</div>' +
+    '<div id="coupons-loading" class="plans-status">Loading coupons...</div>' +
+    '<div id="coupons-list" class="coupons-list" style="display:none;"></div>' +
+    '</div>' +
+    '</div>';
 
 // Run builds
 await buildApp({
