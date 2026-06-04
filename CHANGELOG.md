@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **MCP Apps — coupon creation form.** `create_coupon` now ships with an interactive `ui://` configuration form. It features plan selection loaded dynamically via `list_plans`, client-side validation, and a user-friendly dark/light theme dashboard with validation checks.
+- **MCP Apps — customer profile card.** `get_user` now ships with an interactive `ui://` customer detail view. Features top metrics (Active Subscriptions, Active Licenses count, multi-currency LTV) and tabbed views for Subscriptions, Payments, and Licenses (with redacted license keys and active activation slots).
+- **Curated read support for licenses and coupons.** Added `list_licenses`, `get_license`, `list_coupons`, and `get_coupon` curated named tools and CLI command groups.
 - **MCP Apps — revenue dashboard.** `revenue_summary` now ships an interactive `ui://` dashboard
   (per-currency cards + inline-SVG bars, 30/90/365-day window) rendered in hosts that support
   [MCP Apps](https://apps.extensions.modelcontextprotocol.io/); other hosts get the unchanged text.
