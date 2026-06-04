@@ -79,7 +79,7 @@ const COUPON_CSS = [
     '--bg:#f9fafb;--card-bg:#ffffff;--border:rgba(0,0,0,0.1);',
     '--text:#111827;--text-muted:#6b7280;--primary:#2563eb;--primary-hover:#1d4ed8}}',
     'body{margin:0;padding:16px;background-color:var(--bg);color:var(--text);',
-    'display:flex;justify-content:center;align-items:flex-start;min-height:100vh}',
+    'display:flex;justify-content:center;align-items:flex-start}',
     '.coupon-form-card{background:var(--card-bg);border:1px solid var(--border);',
     'border-radius:12px;padding:24px;width:100%;max-width:480px;',
     'box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -1px rgba(0,0,0,0.06);box-sizing:border-box}',
@@ -162,7 +162,7 @@ await buildApp({
 const CUSTOMER_CSS = [
     ':root{--bg-gradient:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);--card-bg:rgba(30,41,59,0.7);--card-border:rgba(255,255,255,0.08);--text-primary:#f8fafc;--text-secondary:#94a3b8;--primary:#6366f1;--primary-hover:#4f46e5;--success:#10b981;--success-bg:rgba(16,185,129,0.15);--warning:#f59e0b;--warning-bg:rgba(245,158,11,0.15);--error:#ef4444;--error-bg:rgba(239,68,68,0.15);--border-radius:16px;--font-sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}',
     '@media (prefers-color-scheme:light){:root{--bg-gradient:linear-gradient(135deg,#f1f5f9 0%,#e2e8f0 100%);--card-bg:rgba(255,255,255,0.8);--card-border:rgba(0,0,0,0.08);--text-primary:#0f172a;--text-secondary:#475569;--primary:#4f46e5;--primary-hover:#3730a3;--success:#059669;--success-bg:rgba(5,150,105,0.1);--warning:#d97706;--warning-bg:rgba(217,119,6,0.1);--error:#dc2626;--error-bg:rgba(220,38,38,0.1)}}',
-    'body{margin:0;padding:24px;font-family:var(--font-sans);background:var(--bg-gradient);color:var(--text-primary);min-height:100vh;box-sizing:border-box;display:flex;justify-content:center;align-items:flex-start}',
+    'body{margin:0;padding:24px;font-family:var(--font-sans);background:var(--bg-gradient);color:var(--text-primary);box-sizing:border-box;display:flex;justify-content:center;align-items:flex-start}',
     '#root{width:100%;max-width:720px}',
     '.profile-card{background:var(--card-bg);border:1px solid var(--card-border);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-radius:var(--border-radius);padding:28px;box-shadow:0 8px 32px 0 rgba(0,0,0,0.2);box-sizing:border-box;width:100%}',
     '.profile-header{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--card-border);padding-bottom:20px;margin-bottom:24px;gap:16px}',
