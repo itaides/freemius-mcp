@@ -7,7 +7,8 @@
             "!src/core/schema.d.ts",
             "!src/core/catalog.ts",
             "!src/mcp/ui/revenue/generated/dashboard-html.ts",
-            "!src/mcp/ui/coupon/generated/coupon-form-html.ts"
+            "!src/mcp/ui/coupon/generated/coupon-form-html.ts",
+            "!src/mcp/ui/customer/generated/profile-html.ts"
         ]
     },
     "formatter": {

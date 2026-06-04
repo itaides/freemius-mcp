@@ -28,7 +28,16 @@ export function apiErrorResult(error: ApiError): CallToolResult {
 }
 
 export function resultToCall<T>(result: Result<T>): CallToolResult {
-    return result.ok ? jsonResult(result.data) : apiErrorResult(result.error);
+    if (result.ok) {
+        const structuredContent = Array.isArray(result.data)
+            ? { items: result.data }
+            : (result.data as Record<string, unknown>);
+        return {
+            content: [{ type: 'text', text: JSON.stringify(result.data, null, 2) }],
+            structuredContent,
+        } as unknown as CallToolResult;
+    }
+    return apiErrorResult(result.error);
 }
 
 function errorResult(error: Error): CallToolResult {
@@ -55,12 +64,15 @@ export function registerCuratedTools(server: McpServer, client: Freemius, option
             },
             async ({ count, offset }) => resultToCall(await listEntity(client, def, { count, offset }))
         );
+        const meta =
+            def.singular === 'user' ? { ui: { resourceUri: 'ui://freemius/customer-profile.html' } } : undefined;
         server.registerTool(
             `get_${def.singular}`,
             {
                 description: `Get a ${def.singular} by id.`,
                 inputSchema: { id: z.string().describe(`${def.singular} id`) },
                 annotations: readOnly(`Get ${def.singular}`),
+                ...(meta ? { _meta: meta } : {}),
             },
             async ({ id }) => resultToCall(await getEntity(client, def, id))
         );

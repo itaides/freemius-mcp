@@ -19,7 +19,7 @@
         "dev:cli": "bun run src/cli/index.ts",
         "dev:mcp": "bun run src/mcp/index.ts",
         "build": "bun run scripts/build.ts",
-        "typecheck": "tsc --noEmit && tsc --noEmit -p src/mcp/ui/revenue/app/tsconfig.json && tsc --noEmit -p src/mcp/ui/coupon/app/tsconfig.json",
+        "typecheck": "tsc --noEmit && tsc --noEmit -p src/mcp/ui/revenue/app/tsconfig.json && tsc --noEmit -p src/mcp/ui/coupon/app/tsconfig.json && tsc --noEmit -p src/mcp/ui/customer/app/tsconfig.json",
         "test": "vitest run",
         "test:watch": "vitest",
         "lint": "biome check .",

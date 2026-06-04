@@ -10,6 +10,7 @@ import { VERSION } from '../core/version.js';
 import { registerCuratedTools } from './tools/curated.js';
 import { registerDynamicTools } from './tools/dynamic.js';
 import { registerCouponApp } from './ui/coupon/register.js';
+import { registerCustomerApp } from './ui/customer/register.js';
 import { registerRevenueApp } from './ui/revenue/register.js';
 
 async function main(): Promise<void> {
@@ -22,6 +23,7 @@ async function main(): Promise<void> {
     registerCuratedTools(server, client, { writeEnabled });
     registerRevenueApp(server, client);
     registerCouponApp(server);
+    registerCustomerApp(server);
     registerDynamicTools(server, client, { writeEnabled });
 
     await server.connect(new StdioServerTransport());
